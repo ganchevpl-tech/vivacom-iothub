@@ -1,13 +1,83 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SensorGrid } from '@/components/dashboard/SensorGrid';
+import { AccessControlList } from '@/components/dashboard/AccessControlList';
+import { LogManager } from '@/components/dashboard/LogManager';
+import { mockStats, mockSensorReadings, mockAccessEntries, mockLogEntries } from '@/data/mockData';
+import { Cpu, AlertTriangle, Users, Wifi } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <DashboardLayout 
+      title="Dashboard" 
+      subtitle="Real-time IoT monitoring and control"
+    >
+      <div className="space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Total Devices"
+            value={mockStats.totalDevices}
+            subtitle={`${mockStats.devicesOnline} online • ${mockStats.devicesOffline} offline`}
+            icon={Cpu}
+            variant="primary"
+            delay={0}
+          />
+          <StatCard
+            title="Active Alerts"
+            value={mockStats.activeAlerts}
+            subtitle="Requires attention"
+            icon={AlertTriangle}
+            variant={mockStats.activeAlerts > 0 ? 'alert' : 'default'}
+            delay={0.1}
+          />
+          <StatCard
+            title="Personnel On-site"
+            value={mockStats.personnelOnSite}
+            subtitle="Currently checked in"
+            icon={Users}
+            variant="secondary"
+            delay={0.2}
+          />
+          <StatCard
+            title="Network Status"
+            value="99.9%"
+            subtitle="Uptime last 24h"
+            icon={Wifi}
+            trend={{ value: 0.2, isPositive: true }}
+            delay={0.3}
+          />
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Sensor Grid - Takes 2 columns */}
+          <div className="xl:col-span-2">
+            <div className="bg-card rounded-xl shadow-card border border-border p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Live Sensor Grid</h2>
+                  <p className="text-sm text-muted-foreground">Real-time sensor readings</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full bg-status-ok animate-pulse" />
+                  Auto-refresh: 5s
+                </div>
+              </div>
+              <SensorGrid sensors={mockSensorReadings} />
+            </div>
+          </div>
+
+          {/* Access Control - Takes 1 column */}
+          <div className="xl:col-span-1">
+            <AccessControlList entries={mockAccessEntries} />
+          </div>
+        </div>
+
+        {/* Log Manager */}
+        <LogManager logs={mockLogEntries} />
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
