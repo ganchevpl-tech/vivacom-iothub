@@ -3,10 +3,14 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { SensorGrid } from '@/components/dashboard/SensorGrid';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
 import { LogManager } from '@/components/dashboard/LogManager';
+import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { mockStats, mockSensorReadings, mockAccessEntries, mockLogEntries } from '@/data/mockData';
+import { useFlespiData } from '@/hooks/useFlespiData';
 import { Cpu, AlertTriangle, Users, Wifi } from 'lucide-react';
 
 const Index = () => {
+  const { sensors: liveSensors, isConnected, lastUpdated } = useFlespiData();
+
   return (
     <DashboardLayout 
       title="Dashboard" 
@@ -59,12 +63,21 @@ const Index = () => {
                   <h2 className="text-lg font-semibold text-foreground">Live Sensor Grid</h2>
                   <p className="text-sm text-muted-foreground">Real-time sensor readings</p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full bg-status-ok animate-pulse" />
-                  Auto-refresh: 5s
+                <div className="flex items-center gap-4">
+                  <LiveIndicator isConnected={isConnected} />
+                  <div className="text-xs text-muted-foreground">
+                    {lastUpdated 
+                      ? `Updated: ${lastUpdated.toLocaleTimeString()}`
+                      : 'Connecting...'
+                    }
+                  </div>
                 </div>
               </div>
-              <SensorGrid sensors={mockSensorReadings} />
+              <SensorGrid 
+                sensors={mockSensorReadings} 
+                liveSensors={liveSensors}
+                isConnected={isConnected}
+              />
             </div>
           </div>
 
