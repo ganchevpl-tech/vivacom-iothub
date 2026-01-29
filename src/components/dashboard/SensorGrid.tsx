@@ -2,10 +2,13 @@ import { motion } from 'framer-motion';
 import { Thermometer, Droplets, DoorOpen, DoorClosed, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SensorReading } from '@/types/dashboard';
+import { LiveIndicator } from './LiveIndicator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SensorCardProps {
   sensor: SensorReading;
   index: number;
+  isLive?: boolean;
 }
 
 const sensorIcons = {
@@ -28,7 +31,7 @@ const statusDotColors = {
   warning: 'bg-status-warning',
 };
 
-export function SensorCard({ sensor, index }: SensorCardProps) {
+export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
   const Icon = sensorIcons[sensor.type];
   const isDoor = sensor.type === 'door';
   const doorOpen = sensor.value === true;
@@ -46,7 +49,8 @@ export function SensorCard({ sensor, index }: SensorCardProps) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn(
         'relative rounded-xl border-2 p-5 bg-card shadow-card transition-all duration-300 hover:shadow-card-hover',
-        statusColors[sensor.status]
+        statusColors[sensor.status],
+        isLive && 'ring-2 ring-primary/20'
       )}
     >
       {/* Status Indicator */}
@@ -112,38 +116,106 @@ export function SensorCard({ sensor, index }: SensorCardProps) {
 
 interface SensorGridProps {
   sensors: SensorReading[];
+  liveSensors?: SensorReading[];
+  isConnected?: boolean;
+  isLoading?: boolean;
 }
 
-export function SensorGrid({ sensors }: SensorGridProps) {
-  const temperatureSensors = sensors.filter(s => s.type === 'temperature');
-  const humiditySensors = sensors.filter(s => s.type === 'humidity');
-  const doorSensors = sensors.filter(s => s.type === 'door');
+function SensorSkeleton() {
+  return (
+    <div className="rounded-xl border-2 border-border p-5 bg-card">
+      <div className="flex justify-between mb-4">
+        <Skeleton className="w-12 h-12 rounded-lg" />
+        <Skeleton className="w-16 h-4" />
+      </div>
+      <Skeleton className="w-20 h-4 mb-2" />
+      <Skeleton className="w-16 h-8 mb-1" />
+      <Skeleton className="w-24 h-4" />
+    </div>
+  );
+}
+
+export function SensorGrid({ sensors, liveSensors = [], isConnected = false, isLoading = false }: SensorGridProps) {
+  // Merge live sensors with mock sensors, prioritizing live data
+  const mergedSensors = [...sensors];
+  
+  // Add live sensors that don't exist in mock data
+  liveSensors.forEach(liveSensor => {
+    const existingIndex = mergedSensors.findIndex(s => 
+      s.type === liveSensor.type && s.location === liveSensor.location
+    );
+    if (existingIndex === -1) {
+      mergedSensors.push(liveSensor);
+    }
+  });
+
+  const temperatureSensors = mergedSensors.filter(s => s.type === 'temperature');
+  const humiditySensors = mergedSensors.filter(s => s.type === 'humidity');
+  const doorSensors = mergedSensors.filter(s => s.type === 'door');
+
+  // Check if a sensor is from live data
+  const isLiveSensor = (sensor: SensorReading) => 
+    liveSensors.some(ls => ls.id === sensor.id);
 
   return (
     <div className="space-y-6">
       {/* Temperature Section */}
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Thermometer className="w-4 h-4" />
-          Temperature Sensors
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Thermometer className="w-4 h-4" />
+            Temperature Sensors
+          </h3>
+          {liveSensors.filter(s => s.type === 'temperature').length > 0 && (
+            <LiveIndicator isConnected={isConnected} />
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {temperatureSensors.map((sensor, i) => (
-            <SensorCard key={sensor.id} sensor={sensor} index={i} />
-          ))}
+          {isLoading && temperatureSensors.length === 0 ? (
+            <>
+              <SensorSkeleton />
+              <SensorSkeleton />
+            </>
+          ) : (
+            temperatureSensors.map((sensor, i) => (
+              <SensorCard 
+                key={sensor.id} 
+                sensor={sensor} 
+                index={i} 
+                isLive={isLiveSensor(sensor)}
+              />
+            ))
+          )}
         </div>
       </div>
 
       {/* Humidity Section */}
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Droplets className="w-4 h-4" />
-          Humidity Sensors
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Droplets className="w-4 h-4" />
+            Humidity Sensors
+          </h3>
+          {liveSensors.filter(s => s.type === 'humidity').length > 0 && (
+            <LiveIndicator isConnected={isConnected} />
+          )}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {humiditySensors.map((sensor, i) => (
-            <SensorCard key={sensor.id} sensor={sensor} index={i} />
-          ))}
+          {isLoading && humiditySensors.length === 0 ? (
+            <>
+              <SensorSkeleton />
+              <SensorSkeleton />
+            </>
+          ) : (
+            humiditySensors.map((sensor, i) => (
+              <SensorCard 
+                key={sensor.id} 
+                sensor={sensor} 
+                index={i}
+                isLive={isLiveSensor(sensor)}
+              />
+            ))
+          )}
         </div>
       </div>
 
