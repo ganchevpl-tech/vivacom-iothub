@@ -1,8 +1,8 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
+import { AccessPointsMap } from '@/components/dashboard/AccessPointsMap';
 import { mockAccessEntries } from '@/data/mockData';
-import { motion } from 'framer-motion';
-import { ShieldCheck, Users, Clock, MapPin } from 'lucide-react';
+import { ShieldCheck, Clock, MapPin } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/StatCard';
 
 const AccessControl = () => {
@@ -52,18 +52,7 @@ const AccessControl = () => {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <AccessControlList entries={mockAccessEntries} />
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="bg-card rounded-xl shadow-card border border-border p-6"
-          >
-            <h3 className="text-lg font-semibold text-foreground mb-4">Access Points Map</h3>
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Interactive map coming soon</p>
-            </div>
-          </motion.div>
+          <AccessPointsMap />
         </div>
       </div>
     </DashboardLayout>
