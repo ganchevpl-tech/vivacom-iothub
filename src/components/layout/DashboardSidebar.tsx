@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Wifi,
-  Menu
+  Menu,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ interface SidebarProps {
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/access-control', label: 'Access Control', icon: ShieldCheck },
+  { path: '/time-management', label: 'Time Management', icon: Clock },
   { path: '/logs', label: 'Logs', icon: FileText },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
