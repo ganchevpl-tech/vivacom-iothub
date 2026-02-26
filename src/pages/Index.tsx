@@ -6,10 +6,14 @@ import { LogManager } from '@/components/dashboard/LogManager';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { mockStats, mockSensorReadings, mockAccessEntries, mockLogEntries } from '@/data/mockData';
 import { useFlespiData } from '@/hooks/useFlespiData';
-import { Cpu, AlertTriangle, Users, Wifi } from 'lucide-react';
+import { Cpu, AlertTriangle, Users, Wifi, WifiOff } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
-  const { sensors: liveSensors, isConnected, lastUpdated } = useFlespiData();
+  const { sensors: liveSensors, isConnected, lastUpdated, error } = useFlespiData();
+
+  const activeAlerts = liveSensors.length > 0 ? liveSensors.filter(s => s.status === 'alert').length : mockStats.activeAlerts;
+  const personnelOnSite = mockStats.personnelOnSite;
 
   return (
     <DashboardLayout 
@@ -17,6 +21,16 @@ const Index = () => {
       subtitle="Real-time IoT monitoring and control"
     >
       <div className="space-y-8">
+        {/* Connection Error Banner */}
+        {error && (
+          <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+            <WifiOff className="h-4 w-4" />
+            <AlertDescription className="ml-2">
+              Connection error: {error}. Showing cached/mock data.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
@@ -29,15 +43,15 @@ const Index = () => {
           />
           <StatCard
             title="Active Alerts"
-            value={mockStats.activeAlerts}
+            value={activeAlerts ?? mockStats.activeAlerts}
             subtitle="Requires attention"
             icon={AlertTriangle}
-            variant={mockStats.activeAlerts > 0 ? 'alert' : 'default'}
+            variant={(activeAlerts ?? mockStats.activeAlerts) > 0 ? 'alert' : 'default'}
             delay={0.1}
           />
           <StatCard
             title="Personnel On-site"
-            value={mockStats.personnelOnSite}
+            value={personnelOnSite ?? mockStats.personnelOnSite}
             subtitle="Currently checked in"
             icon={Users}
             variant="secondary"
@@ -67,15 +81,14 @@ const Index = () => {
                   <LiveIndicator isConnected={isConnected} />
                   <div className="text-xs text-muted-foreground">
                     {lastUpdated 
-                      ? `Updated: ${lastUpdated.toLocaleTimeString()}`
+                      ? `Updated: ${lastUpdated.toLocaleTimeString('bg-BG', { timeZone: 'Europe/Sofia' })}`
                       : 'Connecting...'
                     }
                   </div>
                 </div>
               </div>
               <SensorGrid 
-                sensors={mockSensorReadings} 
-                liveSensors={liveSensors}
+                sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings}
                 isConnected={isConnected}
               />
             </div>
