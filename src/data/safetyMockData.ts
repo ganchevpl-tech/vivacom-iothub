@@ -1,0 +1,175 @@
+import {
+  Patient,
+  SafeZone,
+  SafetyAlert,
+  NightWanderingEvent,
+  Visitor,
+} from '@/types/safety';
+
+export const mockPatients: Patient[] = [
+  {
+    id: 'pat-001',
+    name: 'Petar Angelov',
+    roomNumber: '201-A',
+    riskLevel: 'high',
+    identificationMethod: 'rfid',
+    conditions: ['Dementia', 'Wandering Risk'],
+  },
+  {
+    id: 'pat-002',
+    name: 'Mila Hristova',
+    roomNumber: '305-B',
+    riskLevel: 'medium',
+    identificationMethod: 'face-id',
+    conditions: ['Alzheimer\'s'],
+  },
+  {
+    id: 'pat-003',
+    name: 'Ivan Borisov',
+    roomNumber: '108-C',
+    riskLevel: 'high',
+    identificationMethod: 'rfid',
+    conditions: ['Dementia', 'Fall Risk'],
+  },
+  {
+    id: 'pat-004',
+    name: 'Rada Vasileva',
+    roomNumber: '402-A',
+    riskLevel: 'low',
+    identificationMethod: 'wifi',
+    conditions: ['Mild Cognitive Impairment'],
+  },
+];
+
+export const mockSafeZones: SafeZone[] = [
+  { id: 'zone-01', name: 'Main Lobby', accessPointId: 'viva-hq', zoneType: 'safe', description: 'Monitored common area' },
+  { id: 'zone-02', name: 'Emergency Exit A', accessPointId: 'the-mall', zoneType: 'exit', description: 'Ground floor exit' },
+  { id: 'zone-03', name: 'Parking Level B1', accessPointId: 'paradise-center', zoneType: 'unauthorized', description: 'Underground parking' },
+  { id: 'zone-04', name: 'Garden Terrace', accessPointId: 'ndk', zoneType: 'safe', description: 'Outdoor monitored area' },
+  { id: 'zone-05', name: 'Pharmacy Storage', accessPointId: 'viva-hq', zoneType: 'restricted', description: 'Medication storage' },
+];
+
+const now = new Date();
+const fmt = (d: Date) => d.toISOString();
+
+export const mockSafetyAlerts: SafetyAlert[] = [
+  {
+    id: 'alert-001',
+    patientId: 'pat-001',
+    patientName: 'Petar Angelov',
+    zoneId: 'zone-02',
+    zoneName: 'Emergency Exit A',
+    zoneType: 'exit',
+    alertLevel: 'panic',
+    timestamp: fmt(new Date(now.getTime() - 3 * 60000)),
+    identificationMethod: 'rfid',
+    acknowledged: false,
+    description: 'High-risk patient detected at emergency exit',
+  },
+  {
+    id: 'alert-002',
+    patientId: 'pat-003',
+    patientName: 'Ivan Borisov',
+    zoneId: 'zone-03',
+    zoneName: 'Parking Level B1',
+    zoneType: 'unauthorized',
+    alertLevel: 'panic',
+    timestamp: fmt(new Date(now.getTime() - 12 * 60000)),
+    identificationMethod: 'rfid',
+    acknowledged: true,
+    description: 'Patient entered unauthorized zone',
+  },
+  {
+    id: 'alert-003',
+    patientId: 'pat-002',
+    patientName: 'Mila Hristova',
+    zoneId: 'zone-05',
+    zoneName: 'Pharmacy Storage',
+    zoneType: 'restricted',
+    alertLevel: 'warning',
+    timestamp: fmt(new Date(now.getTime() - 45 * 60000)),
+    identificationMethod: 'face-id',
+    acknowledged: true,
+    description: 'Patient near restricted area',
+  },
+];
+
+export const mockNightWandering: NightWanderingEvent[] = [
+  {
+    id: 'nw-001',
+    patientId: 'pat-001',
+    patientName: 'Petar Angelov',
+    detectedAt: fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 2, 15)),
+    zoneName: 'Main Lobby',
+    identificationMethod: 'rfid',
+    duration: 23,
+    resolved: true,
+  },
+  {
+    id: 'nw-002',
+    patientId: 'pat-003',
+    patientName: 'Ivan Borisov',
+    detectedAt: fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 1, 42)),
+    zoneName: 'Garden Terrace',
+    identificationMethod: 'rfid',
+    duration: 8,
+    resolved: true,
+  },
+  {
+    id: 'nw-003',
+    patientId: 'pat-002',
+    patientName: 'Mila Hristova',
+    detectedAt: fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 3, 5)),
+    zoneName: 'Main Lobby',
+    identificationMethod: 'face-id',
+    duration: 15,
+    resolved: true,
+  },
+];
+
+export const mockVisitors: Visitor[] = [
+  {
+    id: 'vis-001',
+    name: 'Dr. Borislav Petrov',
+    purpose: 'Patient Consultation',
+    hostEmployee: 'Elena Dimitrova',
+    accessGrantedAt: fmt(new Date(now.getTime() - 2 * 3600000)),
+    expiresAt: fmt(new Date(now.getTime() + 1 * 3600000)),
+    identificationMethod: 'face-id',
+    accessPointIds: ['viva-hq', 'ndk'],
+    isActive: true,
+  },
+  {
+    id: 'vis-002',
+    name: 'Anna Marinova',
+    purpose: 'Family Visit',
+    hostEmployee: 'Stefan Ivanov',
+    accessGrantedAt: fmt(new Date(now.getTime() - 30 * 60000)),
+    expiresAt: fmt(new Date(now.getTime() + 90 * 60000)),
+    identificationMethod: 'rfid',
+    accessPointIds: ['viva-hq'],
+    isActive: true,
+  },
+  {
+    id: 'vis-003',
+    name: 'Todor Iliev',
+    purpose: 'Equipment Maintenance',
+    hostEmployee: 'Nikola Georgiev',
+    accessGrantedAt: fmt(new Date(now.getTime() - 5 * 3600000)),
+    expiresAt: fmt(new Date(now.getTime() - 1 * 3600000)),
+    identificationMethod: 'wifi',
+    accessPointIds: ['viva-hq', 'the-mall'],
+    isActive: false,
+  },
+  {
+    id: 'vis-004',
+    name: 'Katerina Stoeva',
+    purpose: 'Inspection',
+    hostEmployee: 'Maria Petrova',
+    accessGrantedAt: fmt(new Date(now.getTime() - 15 * 60000)),
+    expiresAt: fmt(new Date(now.getTime() + 45 * 60000)),
+    identificationMethod: 'face-id',
+    accessPointIds: ['viva-hq', 'paradise-center'],
+    isActive: true,
+  },
+];
