@@ -14,7 +14,7 @@ export interface SensorReading {
   id: string;
   deviceId: string;
   type: 'temperature' | 'humidity' | 'door' | 'motion' | 'pressure';
-  value: number | boolean;
+  value: number | boolean | string;
   unit?: string;
   status: 'ok' | 'alert' | 'warning';
   timestamp: string;
