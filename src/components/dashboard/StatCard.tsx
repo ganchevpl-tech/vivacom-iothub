@@ -54,11 +54,12 @@ export function StatCard({
         <div className="space-y-2">
           <p className={cn(
             'text-sm font-medium',
-            isLight ? 'text-current/80' : 'text-muted-foreground'
+            isLight ? 'opacity-80' : 'text-muted-foreground'
           )}>
             {title}
           </p>
           <motion.p
+            key={String(value)}
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.3, delay: delay + 0.1, type: 'spring' }}
@@ -69,7 +70,7 @@ export function StatCard({
           {subtitle && (
             <p className={cn(
               'text-xs',
-              isLight ? 'text-current/60' : 'text-muted-foreground'
+              isLight ? 'opacity-60' : 'text-muted-foreground'
             )}>
               {subtitle}
             </p>
@@ -77,7 +78,7 @@ export function StatCard({
           {trend && (
             <div className={cn(
               'flex items-center gap-1 text-xs font-medium',
-              trend.isPositive ? 'text-status-ok' : 'text-status-alert'
+              trend.isPositive ? (isLight ? 'text-white/90' : 'text-status-ok') : (isLight ? 'text-white/90' : 'text-status-alert')
             )}>
               <span>{trend.isPositive ? '↑' : '↓'}</span>
               <span>{Math.abs(trend.value)}%</span>
