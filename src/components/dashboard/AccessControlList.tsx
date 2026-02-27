@@ -3,19 +3,23 @@ import { CheckCircle2, XCircle, CreditCard, Fingerprint, KeyRound, Smartphone } 
 import { cn } from '@/lib/utils';
 import { AccessEntry } from '@/types/dashboard';
 import { formatDistanceToNow } from 'date-fns';
+import { bg } from 'date-fns/locale';
+import { LiveIndicator } from './LiveIndicator';
 
 interface AccessControlListProps {
   entries: AccessEntry[];
+  isConnected?: boolean;
+  onViewAll?: () => void;
 }
 
-const methodIcons = {
+const methodIcons: Record<string, typeof CreditCard> = {
   card: CreditCard,
   biometric: Fingerprint,
   pin: KeyRound,
   mobile: Smartphone,
 };
 
-export function AccessControlList({ entries }: AccessControlListProps) {
+export function AccessControlList({ entries, isConnected = false, onViewAll }: AccessControlListProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,18 +33,13 @@ export function AccessControlList({ entries }: AccessControlListProps) {
             <h3 className="text-lg font-semibold text-foreground">Access Control</h3>
             <p className="text-sm text-muted-foreground">Recent entry attempts</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs text-status-ok">
-              <span className="w-2 h-2 rounded-full bg-status-ok" />
-              Live
-            </span>
-          </div>
+          <LiveIndicator isConnected={isConnected} />
         </div>
       </div>
 
       <div className="divide-y divide-border">
         {entries.map((entry, index) => {
-          const MethodIcon = methodIcons[entry.method];
+          const MethodIcon = methodIcons[entry.method] ?? KeyRound;
           const isGranted = entry.status === 'granted';
           
           return (
@@ -82,7 +81,7 @@ export function AccessControlList({ entries }: AccessControlListProps) {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{entry.accessPoint}</span>
                     <span>•</span>
-                    <span>{formatDistanceToNow(new Date(entry.time), { addSuffix: true })}</span>
+                    <span>{entry.time ? formatDistanceToNow(new Date(entry.time), { addSuffix: true, locale: bg }) : 'Неизвестно време'}</span>
                   </div>
                 </div>
 
@@ -96,11 +95,13 @@ export function AccessControlList({ entries }: AccessControlListProps) {
         })}
       </div>
 
-      <div className="p-4 bg-muted/30 border-t border-border">
-        <button className="w-full text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-          View All Access Logs →
-        </button>
-      </div>
+      {onViewAll && (
+        <div className="p-4 bg-muted/30 border-t border-border">
+          <button onClick={onViewAll} className="w-full text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            View All Access Logs →
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }
