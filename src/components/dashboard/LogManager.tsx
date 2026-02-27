@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { bg } from 'date-fns/locale';
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ interface LogManagerProps {
   logs: LogEntry[];
 }
 
-const resultIcons = {
+const resultIcons: Record<string, typeof CheckCircle2> = {
   success: CheckCircle2,
   failure: XCircle,
   warning: AlertTriangle,
@@ -42,8 +43,11 @@ const categoryColors = {
 export function LogManager({ logs }: LogManagerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   const filteredLogs = useMemo(() => {
+    setPage(1);
     return logs.filter(log => {
       const matchesSearch = searchQuery === '' || 
         log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,6 +59,20 @@ export function LogManager({ logs }: LogManagerProps) {
       return matchesSearch && matchesCategory;
     });
   }, [logs, searchQuery, selectedCategory]);
+
+  const paginatedLogs = filteredLogs.slice((page - 1) * pageSize, page * pageSize);
+
+  const exportCSV = () => {
+    const header = 'Timestamp,User,Action,Category,Result';
+    const rows = filteredLogs.map(l => `${l.timestamp},${l.user},${l.action},${l.category},${l.result}`);
+    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logs-${new Date().toISOString()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const categories = ['access', 'system', 'sensor', 'security'];
 
@@ -74,7 +92,7 @@ export function LogManager({ logs }: LogManagerProps) {
               {filteredLogs.length} of {logs.length} entries
             </p>
           </div>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={exportCSV}>
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
@@ -127,25 +145,25 @@ export function LogManager({ logs }: LogManagerProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredLogs.length === 0 ? (
+            {paginatedLogs.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No logs found matching your criteria
                 </TableCell>
               </TableRow>
             ) : (
-              filteredLogs.map((log, index) => {
-                const ResultIcon = resultIcons[log.result];
+              paginatedLogs.map((log, index) => {
+                const ResultIcon = resultIcons[log.result] ?? AlertTriangle;
                 return (
                   <motion.tr
                     key={log.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.02 }}
+                    transition={{ duration: 0.15 }}
                     className="hover:bg-muted/30 transition-colors group"
                   >
                     <TableCell className="font-mono text-sm text-muted-foreground">
-                      {format(new Date(log.timestamp), 'MMM dd, HH:mm:ss')}
+                      {log.timestamp ? format(new Date(log.timestamp), 'dd.MM.yyyy, HH:mm:ss', { locale: bg }) : 'Неизвестно'}
                     </TableCell>
                     <TableCell className="font-medium">
                       {log.user}
@@ -165,7 +183,7 @@ export function LogManager({ logs }: LogManagerProps) {
                         variant="outline" 
                         className={cn(
                           'capitalize font-medium',
-                          categoryColors[log.category as keyof typeof categoryColors]
+                          categoryColors[log.category as keyof typeof categoryColors] ?? 'bg-muted text-muted-foreground border-border'
                         )}
                       >
                         {log.category}
@@ -191,13 +209,13 @@ export function LogManager({ logs }: LogManagerProps) {
       {/* Footer */}
       <div className="p-4 bg-muted/30 border-t border-border flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredLogs.length} entries
+          Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredLogs.length)} of {filteredLogs.length} entries
         </p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
             Previous
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={page * pageSize >= filteredLogs.length} onClick={() => setPage(p => p + 1)}>
             Next
           </Button>
         </div>
