@@ -4,12 +4,15 @@ import { SensorGrid } from '@/components/dashboard/SensorGrid';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
 import { LogManager } from '@/components/dashboard/LogManager';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { FeatureGate } from '@/components/FeatureGate';
+import { useAuth } from '@/providers/AuthProvider';
 import { mockStats, mockSensorReadings, mockAccessEntries, mockLogEntries } from '@/data/mockData';
 import { useFlespiData } from '@/hooks/useFlespiData';
 import { Cpu, AlertTriangle, Users, Wifi, WifiOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
+  const { currentOrganizationId } = useAuth();
   const { sensors: liveSensors, isConnected, lastUpdated, error } = useFlespiData();
 
   const activeAlerts = liveSensors.length > 0 ? liveSensors.filter(s => s.status === 'alert').length : mockStats.activeAlerts;
@@ -71,27 +74,29 @@ const Index = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Sensor Grid - Takes 2 columns */}
           <div className="xl:col-span-2">
-            <div className="bg-card rounded-xl shadow-card border border-border p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Live Sensor Grid</h2>
-                  <p className="text-sm text-muted-foreground">Real-time sensor readings</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <LiveIndicator isConnected={isConnected} />
-                  <div className="text-xs text-muted-foreground">
-                    {lastUpdated 
-                      ? `Updated: ${lastUpdated.toLocaleTimeString('bg-BG', { timeZone: 'Europe/Sofia' })}`
-                      : 'Connecting...'
-                    }
+            <FeatureGate feature="basic_sensors" organizationId={currentOrganizationId ?? undefined}>
+              <div className="bg-card rounded-xl shadow-card border border-border p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Live Sensor Grid</h2>
+                    <p className="text-sm text-muted-foreground">Real-time sensor readings</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <LiveIndicator isConnected={isConnected} />
+                    <div className="text-xs text-muted-foreground">
+                      {lastUpdated 
+                        ? `Updated: ${lastUpdated.toLocaleTimeString('bg-BG', { timeZone: 'Europe/Sofia' })}`
+                        : 'Connecting...'
+                      }
+                    </div>
                   </div>
                 </div>
+                <SensorGrid 
+                  sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings}
+                  isConnected={isConnected}
+                />
               </div>
-              <SensorGrid 
-                sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings}
-                isConnected={isConnected}
-              />
-            </div>
+            </FeatureGate>
           </div>
 
           {/* Access Control - Takes 1 column */}
@@ -101,7 +106,9 @@ const Index = () => {
         </div>
 
         {/* Log Manager */}
-        <LogManager logs={mockLogEntries} />
+        <FeatureGate feature="log_viewer" organizationId={currentOrganizationId ?? undefined}>
+          <LogManager logs={mockLogEntries} />
+        </FeatureGate>
       </div>
     </DashboardLayout>
   );
