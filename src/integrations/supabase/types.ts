@@ -14,16 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      organization_features: {
+        Row: {
+          enabled: boolean
+          feature: string
+          id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          feature: string
+          id?: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          feature?: string
+          id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_features_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          contact_email: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          organization_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      super_admin_audit_log: {
+        Row: {
+          action: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          reason: string | null
+          super_admin_email: string
+          super_admin_id: string
+          target_organization_id: string | null
+          target_organization_name: string | null
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          reason?: string | null
+          super_admin_email: string
+          super_admin_id: string
+          target_organization_id?: string | null
+          target_organization_name?: string | null
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          reason?: string | null
+          super_admin_email?: string
+          super_admin_id?: string
+          target_organization_id?: string | null
+          target_organization_name?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "super_admin_audit_log_super_admin_id_fkey"
+            columns: ["super_admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "super_admin_audit_log_target_organization_id_fkey"
+            columns: ["target_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "super_admin"
+        | "admin"
+        | "hr_manager"
+        | "medical_staff"
+        | "security"
+        | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +300,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: [
+        "super_admin",
+        "admin",
+        "hr_manager",
+        "medical_staff",
+        "security",
+        "viewer",
+      ],
+    },
   },
 } as const
