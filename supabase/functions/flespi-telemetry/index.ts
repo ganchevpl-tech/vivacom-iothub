@@ -22,10 +22,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch from Flespi MQTT REST API
-    const messagesUrl = "https://flespi.io/mqtt/sessions/all/messages?topic=messages/%23&count=100";
+    // Fetch from Flespi channel messages API
+    const messagesUrl = "https://flespi.io/gw/channels/1355531/messages";
     
-    console.log("Fetching from Flespi API...");
+    console.log("Fetching from Flespi channel 1355531...");
     
     const response = await fetch(messagesUrl, {
       method: "GET",
@@ -76,7 +76,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Flespi messages fetched:", JSON.stringify(data).substring(0, 500));
+    console.log("Flespi data structure:", JSON.stringify(data).substring(0, 500));
 
     return new Response(
       JSON.stringify({ 
