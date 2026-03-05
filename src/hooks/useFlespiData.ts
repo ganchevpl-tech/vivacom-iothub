@@ -66,6 +66,8 @@ export function useFlespiData(): UseFlespiDataReturn {
         return;
       }
 
+      console.log('Flespi raw response:', data);
+
       if (!data?.success) {
         console.error('Flespi API error:', data?.error);
         setError(data?.error || 'Failed to fetch data');
