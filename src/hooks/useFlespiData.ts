@@ -75,69 +75,40 @@ export function useFlespiData(): UseFlespiDataReturn {
         return;
       }
 
-      // Parse the response data
-      const telemetryData = data.data;
-      const newSensors: SensorReading[] = [];
-      const timestamp = new Date().toISOString();
-
-      // Handle different response structures
-      let rawMessages: FlespiTelemetry[] = [];
-      
-      if (data.source === 'messages' && telemetryData?.result) {
-        rawMessages = telemetryData.result;
-      } else if (data.source === 'devices' && telemetryData?.result) {
-        // Device telemetry format
-        rawMessages = Object.values(telemetryData.result).flat() as FlespiTelemetry[];
-      } else if (Array.isArray(telemetryData)) {
-        rawMessages = telemetryData;
-      }
-
-      // Process messages to extract sensor readings
-      const processedTemps = new Set<string>();
-      const processedHums = new Set<string>();
-
-      for (const msg of rawMessages) {
-        const temp = parseTemperature(msg);
-        const hum = parseHumidity(msg);
-        const location = (msg.ident as string) || (msg.device_name as string) || 'Flespi Device';
-
-        if (temp !== null && !processedTemps.has(location)) {
-          processedTemps.add(location);
-          newSensors.push({
-            id: `flespi-temp-${location}`,
-            deviceId: `flespi-${location}`,
-            type: 'temperature',
-            value: Math.round(temp * 10) / 10,
-            unit: '°C',
-            status: getTemperatureStatus(temp),
-            timestamp,
-            location,
-          });
+      if (data.success && data.data) {
+        const rawData = data.data;
+        const sensorArray = Array.isArray(rawData.result) 
+          ? rawData.result 
+          : Object.entries(rawData).map(([ident, values]: [string, any]) => ({
+              ident,
+              ...values
+            }));
+        
+        const timestamp = new Date().toISOString();
+        const mapped: SensorReading[] = sensorArray.map((item: any, i: number) => ({
+          id: item.ident || `sensor-${i}`,
+          deviceId: `flespi-${item.ident || i}`,
+          type: item.temperature !== undefined ? 'temperature' as const : 'humidity' as const,
+          value: item.temperature ?? item.humidity ?? item.value ?? 0,
+          unit: item.temperature !== undefined ? '°C' : '%',
+          location: item.ident || `Sensor ${i}`,
+          status: item.temperature !== undefined 
+            ? getTemperatureStatus(item.temperature) 
+            : item.humidity !== undefined 
+              ? getHumidityStatus(item.humidity) 
+              : 'ok' as const,
+          timestamp,
+        }));
+        
+        console.log('Mapped sensors:', mapped);
+        
+        if (mapped.length > 0) {
+          setSensors(mapped);
         }
-
-        if (hum !== null && !processedHums.has(location)) {
-          processedHums.add(location);
-          newSensors.push({
-            id: `flespi-hum-${location}`,
-            deviceId: `flespi-${location}`,
-            type: 'humidity',
-            value: Math.round(hum),
-            unit: '%',
-            status: getHumidityStatus(hum),
-            timestamp,
-            location,
-          });
-        }
-      }
-
-      // If we got data, update state
-      if (newSensors.length > 0) {
-        setSensors(newSensors);
         setIsConnected(true);
         setLastUpdated(new Date());
         setError(null);
       } else {
-        // No sensor data found, but connection is OK
         setIsConnected(true);
         setLastUpdated(new Date());
         setError(null);
