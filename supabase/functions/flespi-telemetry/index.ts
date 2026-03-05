@@ -23,7 +23,7 @@ serve(async (req) => {
     }
 
     // Try the messages endpoint first for telemetry data
-    const messagesUrl = "https://flespi.io/gw/channels/all/messages?data=%7B%22count%22%3A100%7D";
+    const messagesUrl = "https://flespi.io/gw/channels/1355531/messages";
     
     console.log("Fetching from Flespi API...");
     
