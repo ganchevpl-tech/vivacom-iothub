@@ -22,8 +22,8 @@ serve(async (req) => {
       );
     }
 
-    // Try the messages endpoint first for telemetry data
-    const messagesUrl = "https://flespi.io/gw/channels/1355531/messages";
+    // Fetch from Flespi MQTT REST API
+    const messagesUrl = "https://flespi.io/mqtt/sessions/all/messages?topic=messages/%23&count=100";
     
     console.log("Fetching from Flespi API...");
     
