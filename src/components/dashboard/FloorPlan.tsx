@@ -197,6 +197,9 @@ export function FloorPlan({ sensors = [], isConnected = false }: FloorPlanProps)
     }
   });
 
+  console.log('FloorPlan sensor IDs:', sensors.slice(0, 5).map(s => ({ id: s.id, type: s.type, value: s.value })));
+  console.log('FloorPlan sensorMap keys:', Object.keys(sensorMap));
+
   const getSensorData = (room: Room): SensorData => {
     if (!room.sensorIds) return { temperature: null, humidity: null, lastUpdated: null };
     return {
