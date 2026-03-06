@@ -2,6 +2,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { SensorGrid } from '@/components/dashboard/SensorGrid';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
+import { FloorPlan } from '@/components/dashboard/FloorPlan';
 import { LogManager } from '@/components/dashboard/LogManager';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { FeatureGate } from '@/components/FeatureGate';
@@ -97,6 +98,11 @@ const Index = () => {
                 />
               </div>
             </FeatureGate>
+          </div>
+
+          {/* Floor Plan */}
+          <div className="xl:col-span-2">
+            <FloorPlan sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings} isConnected={isConnected} />
           </div>
 
           {/* Access Control - Takes 1 column */}
