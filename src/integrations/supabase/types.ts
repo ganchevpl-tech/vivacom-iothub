@@ -156,6 +156,42 @@ export type Database = {
           },
         ]
       }
+      user_notification_settings: {
+        Row: {
+          browser_push: boolean
+          email_alerts: boolean
+          id: string
+          sms_alerts: boolean
+          sound_alerts: boolean
+          telegram_alerts: boolean
+          updated_at: string
+          user_id: string
+          viber_alerts: boolean
+        }
+        Insert: {
+          browser_push?: boolean
+          email_alerts?: boolean
+          id?: string
+          sms_alerts?: boolean
+          sound_alerts?: boolean
+          telegram_alerts?: boolean
+          updated_at?: string
+          user_id: string
+          viber_alerts?: boolean
+        }
+        Update: {
+          browser_push?: boolean
+          email_alerts?: boolean
+          id?: string
+          sms_alerts?: boolean
+          sound_alerts?: boolean
+          telegram_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+          viber_alerts?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

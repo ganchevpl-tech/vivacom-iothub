@@ -1,13 +1,110 @@
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Bell, Shield, Database, Wifi, Moon, Sun } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Shield, Database, Wifi, Moon, Sun, Save, Loader2, MessageSquare, Phone, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface NotificationSettings {
+  browser_push: boolean;
+  email_alerts: boolean;
+  sms_alerts: boolean;
+  viber_alerts: boolean;
+  telegram_alerts: boolean;
+  sound_alerts: boolean;
+}
+
+const DEFAULT_SETTINGS: NotificationSettings = {
+  browser_push: true,
+  email_alerts: true,
+  sms_alerts: false,
+  viber_alerts: false,
+  telegram_alerts: false,
+  sound_alerts: false,
+};
 
 const Settings = () => {
+  const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setIsLoading(false); return; }
+
+      const { data, error } = await (supabase as any)
+        .from('user_notification_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data && !error) {
+        setNotifications({
+          browser_push: data.browser_push,
+          email_alerts: data.email_alerts,
+          sms_alerts: data.sms_alerts,
+          viber_alerts: data.viber_alerts,
+          telegram_alerts: data.telegram_alerts,
+          sound_alerts: data.sound_alerts,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load notification settings:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Трябва да сте влезли в системата'); return; }
+
+      const { error } = await (supabase as any)
+        .from('user_notification_settings')
+        .upsert({
+          user_id: user.id,
+          ...notifications,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      toast.success('Настройките са запазени');
+      setHasChanges(false);
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      toast.error('Грешка при запазване');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateSetting = (key: keyof NotificationSettings, value: boolean) => {
+    setNotifications(prev => ({ ...prev, [key]: value }));
+    setHasChanges(true);
+  };
+
+  const NOTIFICATION_CHANNELS = [
+    { key: 'browser_push' as const, label: 'Browser Push', desc: 'Получавайте известия в браузъра', icon: Bell },
+    { key: 'email_alerts' as const, label: 'Email', desc: 'Критични известия по имейл', icon: Send },
+    { key: 'sms_alerts' as const, label: 'SMS', desc: 'Известия чрез SMS съобщения', icon: Phone },
+    { key: 'viber_alerts' as const, label: 'Viber', desc: 'Известия чрез Viber', icon: MessageSquare },
+    { key: 'telegram_alerts' as const, label: 'Telegram', desc: 'Известия чрез Telegram бот', icon: Send },
+    { key: 'sound_alerts' as const, label: 'Звукови известия', desc: 'Звуков сигнал при нови известия', icon: Bell },
+  ];
+
   return (
     <DashboardLayout 
       title="Settings" 
@@ -57,40 +154,44 @@ const Settings = () => {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="bg-card rounded-xl shadow-card border border-border p-6"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-secondary/10">
-              <Bell className="w-5 h-5 text-secondary" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary/10">
+                <Bell className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Канали за известия</h3>
+                <p className="text-sm text-muted-foreground">Изберете как да получавате известия</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">Notifications</h3>
-              <p className="text-sm text-muted-foreground">Configure alert preferences</p>
-            </div>
+            {hasChanges && (
+              <Button onClick={saveSettings} disabled={isSaving} size="sm" className="gap-2">
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Запази
+              </Button>
+            )}
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive alerts on your device</p>
+            {NOTIFICATION_CHANNELS.map((channel, idx) => (
+              <div key={channel.key}>
+                {idx > 0 && <Separator className="mb-4" />}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <channel.icon className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <Label>{channel.label}</Label>
+                      <p className="text-sm text-muted-foreground">{channel.desc}</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notifications[channel.key]}
+                    onCheckedChange={(checked) => updateSetting(channel.key, checked)}
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Email Alerts</Label>
-                <p className="text-sm text-muted-foreground">Get critical alerts via email</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Sound Alerts</Label>
-                <p className="text-sm text-muted-foreground">Play sound for new alerts</p>
-              </div>
-              <Switch />
-            </div>
+            ))}
           </div>
         </motion.div>
 
