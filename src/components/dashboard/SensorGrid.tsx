@@ -135,7 +135,12 @@ function SensorSkeleton() {
 }
 
 export function SensorGrid({ sensors, isConnected = false, isLoading = false }: SensorGridProps) {
-  const mergedSensors = sensors;
+  // Deduplicate sensors by id, keeping the latest entry (last occurrence)
+  const deduped = new Map<string, SensorReading>();
+  for (const s of sensors) {
+    deduped.set(s.id, s);
+  }
+  const mergedSensors = Array.from(deduped.values());
 
   const temperatureSensors = mergedSensors.filter(s => s.type === 'temperature');
   const humiditySensors = mergedSensors.filter(s => s.type === 'humidity');
