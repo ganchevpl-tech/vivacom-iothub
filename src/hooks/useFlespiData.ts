@@ -77,29 +77,52 @@ export function useFlespiData(): UseFlespiDataReturn {
 
       if (data.success && data.data) {
         const rawData = data.data;
-        const sensorArray = Array.isArray(rawData.result) 
-          ? rawData.result 
-          : Object.entries(rawData).map(([ident, values]: [string, any]) => ({
-              ident,
-              ...values
-            }));
+        const messages: any[] = Array.isArray(rawData.result) ? rawData.result : [];
         
+        // Deduplicate: keep only the last message per unique ident
+        const latestByIdent = new Map<string, any>();
+        for (const msg of messages) {
+          if (msg.ident) {
+            latestByIdent.set(msg.ident, msg);
+          }
+        }
+
         const timestamp = new Date().toISOString();
-        const mapped: SensorReading[] = sensorArray.map((item: any, i: number) => ({
-          id: item.ident || `sensor-${i}`,
-          deviceId: `flespi-${item.ident || i}`,
-          type: item.temperature !== undefined ? 'temperature' as const : 'humidity' as const,
-          value: item.temperature ?? item.humidity ?? item.value ?? 0,
-          unit: item.temperature !== undefined ? '°C' : '%',
-          location: item.ident || `Sensor ${i}`,
-          status: item.temperature !== undefined 
-            ? getTemperatureStatus(item.temperature) 
-            : item.humidity !== undefined 
-              ? getHumidityStatus(item.humidity) 
-              : 'ok' as const,
-          timestamp,
-        }));
-        
+        const mapped: SensorReading[] = [];
+
+        for (const [ident, msg] of latestByIdent) {
+          // Extract base name (remove _temperature/_humidity suffix if present)
+          const baseName = ident.replace(/_(temperature|humidity)$/, '');
+          
+          // Temperature sensor
+          if (msg.value !== undefined && msg.value !== null && ident.endsWith('_temperature')) {
+            mapped.push({
+              id: `${baseName}_temp`,
+              deviceId: `flespi-${baseName}`,
+              type: 'temperature' as const,
+              value: msg.value,
+              unit: '°C',
+              location: baseName.replace(/_/g, ' '),
+              status: getTemperatureStatus(msg.value),
+              timestamp,
+            });
+          }
+          
+          // Humidity sensor
+          if (msg.value !== undefined && msg.value !== null && ident.endsWith('_humidity')) {
+            mapped.push({
+              id: `${baseName}_hum`,
+              deviceId: `flespi-${baseName}`,
+              type: 'humidity' as const,
+              value: msg.value,
+              unit: '%',
+              location: baseName.replace(/_/g, ' '),
+              status: getHumidityStatus(msg.value),
+              timestamp,
+            });
+          }
+        }
+
         console.log('Mapped sensors:', mapped);
         
         if (mapped.length > 0) {
