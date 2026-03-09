@@ -5,95 +5,73 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const FLESPI_TOKEN = Deno.env.get("FLESPI_TOKEN");
-    
     if (!FLESPI_TOKEN) {
-      console.error("FLESPI_TOKEN is not configured");
       return new Response(
         JSON.stringify({ error: "Flespi token not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Fetch from Flespi channel messages API
-    const messagesUrl = "https://flespi.io/gw/channels/1355531/messages";
-    
-    console.log("Fetching from Flespi channel 1355531...");
-    
-    const response = await fetch(messagesUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `FlespiToken ${FLESPI_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const headers = {
+      "Authorization": `FlespiToken ${FLESPI_TOKEN}`,
+      "Content-Type": "application/json",
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Flespi API error:", response.status, errorText);
-      
-      // Try alternative endpoint - device telemetry
-      const devicesUrl = "https://flespi.io/gw/devices/all/telemetry/all";
-      const devicesResponse = await fetch(devicesUrl, {
-        method: "GET",
-        headers: {
-          "Authorization": `FlespiToken ${FLESPI_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // Try channel messages first
+    try {
+      const response = await fetchWithTimeout(
+        "https://flespi.io/gw/channels/1355531/messages?data=%7B%22count%22%3A1%7D",
+        { method: "GET", headers }
+      );
 
-      if (!devicesResponse.ok) {
-        const devicesError = await devicesResponse.text();
-        console.error("Flespi devices API error:", devicesResponse.status, devicesError);
+      if (response.ok) {
+        const data = await response.json();
         return new Response(
-          JSON.stringify({ 
-            error: "Failed to fetch telemetry", 
-            status: devicesResponse.status,
-            details: devicesError 
-          }),
-          { status: devicesResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: true, source: "messages", data }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    } catch (e) {
+      // Channel fetch failed or timed out, try devices
+    }
 
-      const devicesData = await devicesResponse.json();
-      console.log("Flespi devices telemetry fetched:", JSON.stringify(devicesData).substring(0, 500));
-      
+    // Fallback: device telemetry
+    const devResponse = await fetchWithTimeout(
+      "https://flespi.io/gw/devices/all/telemetry/all",
+      { method: "GET", headers }
+    );
+
+    if (!devResponse.ok) {
+      const errText = await devResponse.text();
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          source: "devices",
-          data: devicesData 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Failed to fetch telemetry", status: devResponse.status, details: errText }),
+        { status: devResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const data = await response.json();
-    console.log("Flespi data structure:", JSON.stringify(data).substring(0, 500));
-
+    const devData = await devResponse.json();
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        source: "messages",
-        data: data 
-      }),
+      JSON.stringify({ success: true, source: "devices", data: devData }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error fetching Flespi data:", error);
+    const msg = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error",
-        success: false 
-      }),
+      JSON.stringify({ error: msg, success: false }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
