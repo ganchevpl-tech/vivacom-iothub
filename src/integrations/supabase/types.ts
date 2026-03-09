@@ -161,34 +161,43 @@ export type Database = {
           browser_push: boolean
           email_alerts: boolean
           id: string
+          phone_number: string | null
           sms_alerts: boolean
           sound_alerts: boolean
           telegram_alerts: boolean
+          telegram_username: string | null
           updated_at: string
           user_id: string
           viber_alerts: boolean
+          viber_number: string | null
         }
         Insert: {
           browser_push?: boolean
           email_alerts?: boolean
           id?: string
+          phone_number?: string | null
           sms_alerts?: boolean
           sound_alerts?: boolean
           telegram_alerts?: boolean
+          telegram_username?: string | null
           updated_at?: string
           user_id: string
           viber_alerts?: boolean
+          viber_number?: string | null
         }
         Update: {
           browser_push?: boolean
           email_alerts?: boolean
           id?: string
+          phone_number?: string | null
           sms_alerts?: boolean
           sound_alerts?: boolean
           telegram_alerts?: boolean
+          telegram_username?: string | null
           updated_at?: string
           user_id?: string
           viber_alerts?: boolean
+          viber_number?: string | null
         }
         Relationships: []
       }
