@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+let cachedResponse: { data: any; timestamp: number } | null = null;
+const CACHE_DURATION_MS = 30_000; // 30 seconds
+
 function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -17,6 +20,15 @@ serve(async (req) => {
   }
 
   try {
+    // Return cached data if fresh
+    const now = Date.now();
+    if (cachedResponse && (now - cachedResponse.timestamp < CACHE_DURATION_MS)) {
+      return new Response(
+        JSON.stringify(cachedResponse.data),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const FLESPI_TOKEN = Deno.env.get("FLESPI_TOKEN");
     if (!FLESPI_TOKEN) {
       return new Response(
@@ -39,13 +51,15 @@ serve(async (req) => {
 
       if (response.ok) {
         const data = await response.json();
+        const result = { success: true, source: "messages", data };
+        cachedResponse = { data: result, timestamp: Date.now() };
         return new Response(
-          JSON.stringify({ success: true, source: "messages", data }),
+          JSON.stringify(result),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-    } catch (e) {
-      // Channel fetch failed or timed out, try devices
+    } catch (_e) {
+      // Channel fetch failed, try devices
     }
 
     // Fallback: device telemetry
@@ -63,8 +77,10 @@ serve(async (req) => {
     }
 
     const devData = await devResponse.json();
+    const result = { success: true, source: "devices", data: devData };
+    cachedResponse = { data: result, timestamp: Date.now() };
     return new Response(
-      JSON.stringify({ success: true, source: "devices", data: devData }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
