@@ -19,7 +19,7 @@ interface UseFlespiDataReturn {
   refetch: () => Promise<void>;
 }
 
-const POLLING_INTERVAL = 5000; // 5 seconds
+const POLLING_INTERVAL = 60000; // 60 seconds
 
 export function useFlespiData(): UseFlespiDataReturn {
   const [sensors, setSensors] = useState<SensorReading[]>([]);
