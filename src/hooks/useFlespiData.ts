@@ -122,7 +122,7 @@ export function useFlespiData(): UseFlespiDataReturn {
               type: 'humidity' as const,
               value: msg.value,
               unit: '%',
-              location: baseName.replace(/_/g, ' '),
+              location,
               status: getHumidityStatus(msg.value),
               timestamp,
             });
