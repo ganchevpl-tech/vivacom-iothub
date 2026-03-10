@@ -82,6 +82,9 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
 
       {/* Value */}
       <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">
+          {sensor.location}
+        </p>
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
           {sensor.type}
         </p>
@@ -90,9 +93,6 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
           isDoor && (doorOpen ? 'text-status-alert' : 'text-status-ok')
         )}>
           {displayValue}
-        </p>
-        <p className="text-sm text-muted-foreground truncate">
-          {sensor.location}
         </p>
       </div>
 

@@ -90,9 +90,15 @@ export function useFlespiData(): UseFlespiDataReturn {
         const timestamp = new Date().toISOString();
         const mapped: SensorReading[] = [];
 
+        const LOCATION_LABELS: Record<string, string> = {
+          'sensors_for_temp': 'Дневна',
+          'senzor_za_temperatura_plami': 'Спалня Плами',
+          'sonoff_snzb_02d': 'Спалня',
+        };
+
         for (const [ident, msg] of latestByIdent) {
-          // Extract base name (remove _temperature/_humidity suffix if present)
           const baseName = ident.replace(/_(temperature|humidity)$/, '');
+          const location = LOCATION_LABELS[baseName] || baseName.replace(/_/g, ' ');
           
           // Temperature sensor
           if (msg.value !== undefined && msg.value !== null && ident.endsWith('_temperature')) {
@@ -102,7 +108,7 @@ export function useFlespiData(): UseFlespiDataReturn {
               type: 'temperature' as const,
               value: msg.value,
               unit: '°C',
-              location: baseName.replace(/_/g, ' '),
+              location,
               status: getTemperatureStatus(msg.value),
               timestamp,
             });
@@ -116,7 +122,7 @@ export function useFlespiData(): UseFlespiDataReturn {
               type: 'humidity' as const,
               value: msg.value,
               unit: '%',
-              location: baseName.replace(/_/g, ' '),
+              location,
               status: getHumidityStatus(msg.value),
               timestamp,
             });
