@@ -63,6 +63,9 @@ const Settings = () => {
           viber_alerts: data.viber_alerts,
           telegram_alerts: data.telegram_alerts,
           sound_alerts: data.sound_alerts,
+          phone_number: data.phone_number || '',
+          viber_number: data.viber_number || '',
+          telegram_username: data.telegram_username || '',
         });
       }
     } catch (err) {
