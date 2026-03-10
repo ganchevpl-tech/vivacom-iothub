@@ -17,6 +17,9 @@ interface NotificationSettings {
   viber_alerts: boolean;
   telegram_alerts: boolean;
   sound_alerts: boolean;
+  phone_number: string;
+  viber_number: string;
+  telegram_username: string;
 }
 
 const DEFAULT_SETTINGS: NotificationSettings = {
@@ -26,6 +29,9 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   viber_alerts: false,
   telegram_alerts: false,
   sound_alerts: false,
+  phone_number: '',
+  viber_number: '',
+  telegram_username: '',
 };
 
 const Settings = () => {
@@ -57,6 +63,9 @@ const Settings = () => {
           viber_alerts: data.viber_alerts,
           telegram_alerts: data.telegram_alerts,
           sound_alerts: data.sound_alerts,
+          phone_number: data.phone_number || '',
+          viber_number: data.viber_number || '',
+          telegram_username: data.telegram_username || '',
         });
       }
     } catch (err) {
@@ -91,7 +100,7 @@ const Settings = () => {
     }
   };
 
-  const updateSetting = (key: keyof NotificationSettings, value: boolean) => {
+  const updateSetting = (key: keyof NotificationSettings, value: boolean | string) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
@@ -185,11 +194,47 @@ const Settings = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={notifications[channel.key]}
+                    checked={notifications[channel.key] as boolean}
                     onCheckedChange={(checked) => updateSetting(channel.key, checked)}
                     disabled={isLoading}
                   />
                 </div>
+                {channel.key === 'sms_alerts' && notifications.sms_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="phone_number">Телефонен номер (SMS)</Label>
+                    <Input
+                      id="phone_number"
+                      placeholder="+359 888 123 456"
+                      value={notifications.phone_number}
+                      onChange={(e) => updateSetting('phone_number', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
+                {channel.key === 'viber_alerts' && notifications.viber_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="viber_number">Viber номер</Label>
+                    <Input
+                      id="viber_number"
+                      placeholder="+359 888 123 456"
+                      value={notifications.viber_number}
+                      onChange={(e) => updateSetting('viber_number', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
+                {channel.key === 'telegram_alerts' && notifications.telegram_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="telegram_username">Telegram потребител</Label>
+                    <Input
+                      id="telegram_username"
+                      placeholder="@username"
+                      value={notifications.telegram_username}
+                      onChange={(e) => updateSetting('telegram_username', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
