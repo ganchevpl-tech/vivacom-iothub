@@ -33,6 +33,7 @@ export const FEATURE_LABELS: Record<Feature, string> = {
   sub_accounts:        'Под-акаунти',
   api_access:          'API достъп',
   custom_reports:      'Персонализирани отчети',
+  google_maps:         'Google Maps изглед',
 };
 
 export const DEFAULT_FEATURES: Feature[] = [
