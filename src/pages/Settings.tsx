@@ -17,6 +17,9 @@ interface NotificationSettings {
   viber_alerts: boolean;
   telegram_alerts: boolean;
   sound_alerts: boolean;
+  phone_number: string;
+  viber_number: string;
+  telegram_username: string;
 }
 
 const DEFAULT_SETTINGS: NotificationSettings = {
@@ -26,6 +29,9 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   viber_alerts: false,
   telegram_alerts: false,
   sound_alerts: false,
+  phone_number: '',
+  viber_number: '',
+  telegram_username: '',
 };
 
 const Settings = () => {
