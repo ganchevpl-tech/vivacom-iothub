@@ -194,11 +194,47 @@ const Settings = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={notifications[channel.key]}
+                    checked={notifications[channel.key] as boolean}
                     onCheckedChange={(checked) => updateSetting(channel.key, checked)}
                     disabled={isLoading}
                   />
                 </div>
+                {channel.key === 'sms_alerts' && notifications.sms_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="phone_number">Телефонен номер (SMS)</Label>
+                    <Input
+                      id="phone_number"
+                      placeholder="+359 888 123 456"
+                      value={notifications.phone_number}
+                      onChange={(e) => updateSetting('phone_number', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
+                {channel.key === 'viber_alerts' && notifications.viber_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="viber_number">Viber номер</Label>
+                    <Input
+                      id="viber_number"
+                      placeholder="+359 888 123 456"
+                      value={notifications.viber_number}
+                      onChange={(e) => updateSetting('viber_number', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
+                {channel.key === 'telegram_alerts' && notifications.telegram_alerts && (
+                  <div className="mt-3 ml-7">
+                    <Label htmlFor="telegram_username">Telegram потребител</Label>
+                    <Input
+                      id="telegram_username"
+                      placeholder="@username"
+                      value={notifications.telegram_username}
+                      onChange={(e) => updateSetting('telegram_username', e.target.value)}
+                      className="mt-1 max-w-xs"
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
