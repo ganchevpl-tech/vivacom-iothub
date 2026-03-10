@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import GridLayout, { WidthProvider, Responsive } from 'react-grid-layout';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
