@@ -108,7 +108,7 @@ export function useFlespiData(): UseFlespiDataReturn {
               type: 'temperature' as const,
               value: msg.value,
               unit: '°C',
-              location: baseName.replace(/_/g, ' '),
+              location,
               status: getTemperatureStatus(msg.value),
               timestamp,
             });
