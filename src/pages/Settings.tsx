@@ -100,7 +100,7 @@ const Settings = () => {
     }
   };
 
-  const updateSetting = (key: keyof NotificationSettings, value: boolean) => {
+  const updateSetting = (key: keyof NotificationSettings, value: boolean | string) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
