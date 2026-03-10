@@ -15,7 +15,8 @@ export type Feature =
   | 'account_management'
   | 'sub_accounts'
   | 'api_access'
-  | 'custom_reports';
+  | 'custom_reports'
+  | 'google_maps';
 
 export const FEATURE_LABELS: Record<Feature, string> = {
   basic_sensors:       'Основни сензори',
@@ -32,6 +33,7 @@ export const FEATURE_LABELS: Record<Feature, string> = {
   sub_accounts:        'Под-акаунти',
   api_access:          'API достъп',
   custom_reports:      'Персонализирани отчети',
+  google_maps:         'Google Maps изглед',
 };
 
 export const DEFAULT_FEATURES: Feature[] = [
