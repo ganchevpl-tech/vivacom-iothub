@@ -189,7 +189,7 @@ export function FloorPlan({ sensors = [], isConnected = false }: FloorPlanProps)
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'temperature' | 'humidity'>('temperature');
 
-  // Build a lookup map from sensor id to value
+  // Build a lookup map from sensor id to value — use includes() for fuzzy matching
   const sensorMap: Record<string, number> = {};
   sensors.forEach(s => {
     if (typeof s.value === 'number') {
@@ -200,11 +200,24 @@ export function FloorPlan({ sensors = [], isConnected = false }: FloorPlanProps)
   console.log('FloorPlan sensor IDs:', sensors.slice(0, 5).map(s => ({ id: s.id, type: s.type, value: s.value })));
   console.log('FloorPlan sensorMap keys:', Object.keys(sensorMap));
 
+  // Fuzzy-match: find sensor value where sensorMap key contains the target sensorId string
+  const findSensorValue = (sensorId: string): number | null => {
+    // First try exact match
+    if (sensorMap[sensorId] !== undefined) return sensorMap[sensorId];
+    // Then try includes-based matching
+    for (const key of Object.keys(sensorMap)) {
+      if (key.includes(sensorId) || sensorId.includes(key)) {
+        return sensorMap[key];
+      }
+    }
+    return null;
+  };
+
   const getSensorData = (room: Room): SensorData => {
     if (!room.sensorIds) return { temperature: null, humidity: null, lastUpdated: null };
     return {
-      temperature: sensorMap[room.sensorIds.temperature] ?? null,
-      humidity: sensorMap[room.sensorIds.humidity] ?? null,
+      temperature: findSensorValue(room.sensorIds.temperature),
+      humidity: findSensorValue(room.sensorIds.humidity),
       lastUpdated: sensors.length > 0 ? new Date() : null,
     };
   };
