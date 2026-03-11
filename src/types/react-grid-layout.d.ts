@@ -51,6 +51,10 @@ declare module 'react-grid-layout' {
   export default class ReactGridLayout extends React.Component<ReactGridLayoutProps> {}
 }
 
+declare module 'react-grid-layout/dist/legacy.mjs' {
+  export { Responsive, WidthProvider, Layout, Layouts } from 'react-grid-layout';
+}
+
 declare module 'react-grid-layout/css/styles.css' {
   const content: string;
   export default content;
