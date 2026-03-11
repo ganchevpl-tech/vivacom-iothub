@@ -40,7 +40,7 @@ export function SortableWidget({ id, isEditing, children }: SortableWidgetProps)
         <button
           {...attributes}
           {...listeners}
-          className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md bg-primary/90 text-primary-foreground text-xs font-medium cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 left-2 z-50 flex items-center gap-1 px-2 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium cursor-grab active:cursor-grabbing shadow-md"
         >
           <GripVertical className="w-3 h-3" />
           {WIDGET_LABELS[id] || id}
