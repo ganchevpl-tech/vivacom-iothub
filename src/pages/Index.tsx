@@ -89,6 +89,11 @@ const Index = () => {
     floorplan: (
       <FloorPlan sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings} isConnected={isConnected} />
     ),
+    google_maps: (
+      <FeatureGate feature="google_maps" organizationId={currentOrganizationId ?? undefined}>
+        <GoogleMapsView />
+      </FeatureGate>
+    ),
     logs: (
       <FeatureGate feature="log_viewer" organizationId={currentOrganizationId ?? undefined}>
         <LogManager logs={mockLogEntries} />
