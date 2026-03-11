@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export const DEFAULT_WIDGET_ORDER = ['stats', 'sensors', 'access', 'floorplan', 'logs'];
+export const DEFAULT_WIDGET_ORDER = ['stats', 'sensors', 'access', 'floorplan', 'google_maps', 'logs'];
 
 export const WIDGET_LABELS: Record<string, string> = {
   stats: 'Статистики',
   sensors: 'Сензори (Live)',
   access: 'Контрол на достъпа',
   floorplan: 'Етажен план',
+  google_maps: 'Google Maps',
   logs: 'Логове',
 };
 

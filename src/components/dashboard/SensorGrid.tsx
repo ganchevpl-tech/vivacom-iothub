@@ -1,14 +1,32 @@
+import { useState, useCallback } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { Thermometer, Droplets, DoorOpen, DoorClosed, AlertTriangle } from 'lucide-react';
+import { Thermometer, Droplets, DoorOpen, DoorClosed, AlertTriangle, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SensorReading } from '@/types/dashboard';
-import { LiveIndicator } from './LiveIndicator';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface SensorCardProps {
   sensor: SensorReading;
   index: number;
   isLive?: boolean;
+  isSortable?: boolean;
 }
 
 const sensorIcons = {
@@ -31,7 +49,38 @@ const statusDotColors = {
   warning: 'bg-status-warning',
 };
 
-export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
+function SortableSensorCard({ sensor, index, isLive }: SensorCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sensor.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn('relative', isDragging && 'opacity-50')}>
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-12 z-10 p-1 rounded bg-muted/80 text-muted-foreground cursor-grab active:cursor-grabbing hover:bg-muted transition-colors"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+      <SensorCardInner sensor={sensor} index={index} isLive={isLive} />
+    </div>
+  );
+}
+
+function SensorCardInner({ sensor, index, isLive = false }: SensorCardProps) {
   const Icon = sensorIcons[sensor.type] ?? AlertTriangle;
   const isDoor = sensor.type === 'door';
   const doorOpen = sensor.value === true || sensor.value === 'true' || sensor.value === 1;
@@ -53,7 +102,6 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
         isLive && 'ring-2 ring-primary/20'
       )}
     >
-      {/* Status Indicator */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <span className={cn(
           'w-2.5 h-2.5 rounded-full',
@@ -70,7 +118,6 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
         </span>
       </div>
 
-      {/* Icon */}
       <div className={cn(
         'w-12 h-12 rounded-lg flex items-center justify-center mb-4',
         sensor.status === 'ok' && 'bg-status-ok/10 text-status-ok',
@@ -80,14 +127,9 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
         {isDoor ? <DoorIcon className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
       </div>
 
-      {/* Value */}
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-foreground">
-          {sensor.location}
-        </p>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-          {sensor.type}
-        </p>
+        <p className="text-sm font-semibold text-foreground">{sensor.location}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{sensor.type}</p>
         <p className={cn(
           'text-2xl font-bold sensor-value',
           isDoor && (doorOpen ? 'text-status-alert' : 'text-status-ok')
@@ -96,7 +138,6 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
         </p>
       </div>
 
-      {/* Alert badge for problematic sensors */}
       {sensor.status !== 'ok' && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -113,6 +154,9 @@ export function SensorCard({ sensor, index, isLive = false }: SensorCardProps) {
     </motion.div>
   );
 }
+
+// Re-export for backwards compat
+export const SensorCard = SensorCardInner;
 
 interface SensorGridProps {
   sensors: SensorReading[];
@@ -134,88 +178,74 @@ function SensorSkeleton() {
   );
 }
 
+const STORAGE_KEY = 'sensor-card-order';
+
+function loadSensorOrder(): string[] | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch { return null; }
+}
+
+function saveSensorOrder(order: string[]) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(order)); } catch {}
+}
+
 export function SensorGrid({ sensors, isConnected = false, isLoading = false }: SensorGridProps) {
-  // Deduplicate sensors by id, keeping the latest entry (last occurrence)
   const deduped = new Map<string, SensorReading>();
-  for (const s of sensors) {
-    deduped.set(s.id, s);
-  }
+  for (const s of sensors) deduped.set(s.id, s);
   const mergedSensors = Array.from(deduped.values());
 
-  const temperatureSensors = mergedSensors.filter(s => s.type === 'temperature');
-  const humiditySensors = mergedSensors.filter(s => s.type === 'humidity');
-  const doorSensors = mergedSensors.filter(s => s.type === 'door');
-  const motionPressureSensors = mergedSensors.filter(s => s.type === 'motion' || s.type === 'pressure');
+  // Maintain custom order from localStorage
+  const [customOrder, setCustomOrder] = useState<string[] | null>(() => loadSensorOrder());
+
+  const orderedSensors = (() => {
+    if (!customOrder) return mergedSensors;
+    const map = new Map(mergedSensors.map(s => [s.id, s]));
+    const ordered: SensorReading[] = [];
+    for (const id of customOrder) {
+      const s = map.get(id);
+      if (s) { ordered.push(s); map.delete(id); }
+    }
+    // Append any new sensors not yet in order
+    for (const s of map.values()) ordered.push(s);
+    return ordered;
+  })();
+
+  const sensorPointer = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const sensorKeyboard = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
+  const dndSensors = useSensors(sensorPointer, sensorKeyboard);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = orderedSensors.map(s => s.id);
+    const oldIndex = ids.indexOf(active.id as string);
+    const newIndex = ids.indexOf(over.id as string);
+    const newOrder = arrayMove(ids, oldIndex, newIndex);
+    setCustomOrder(newOrder);
+    saveSensorOrder(newOrder);
+  }, [orderedSensors]);
+
+  const sensorIds = orderedSensors.map(s => s.id);
 
   return (
-    <div className="space-y-6">
-      {/* Temperature Section */}
-      <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Thermometer className="w-4 h-4" />
-          Temperature Sensors
-        </h3>
+    <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={sensorIds} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {isLoading && temperatureSensors.length === 0 ? (
+          {isLoading && orderedSensors.length === 0 ? (
             <>
+              <SensorSkeleton />
               <SensorSkeleton />
               <SensorSkeleton />
             </>
           ) : (
-            temperatureSensors.map((sensor, i) => (
-              <SensorCard key={sensor.id} sensor={sensor} index={i} />
+            orderedSensors.map((sensor, i) => (
+              <SortableSensorCard key={sensor.id} sensor={sensor} index={i} isLive={isConnected} />
             ))
           )}
         </div>
-      </div>
-
-      {/* Humidity Section */}
-      <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Droplets className="w-4 h-4" />
-          Humidity Sensors
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {isLoading && humiditySensors.length === 0 ? (
-            <>
-              <SensorSkeleton />
-              <SensorSkeleton />
-            </>
-          ) : (
-            humiditySensors.map((sensor, i) => (
-              <SensorCard key={sensor.id} sensor={sensor} index={i} />
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Door Status Section */}
-      <div>
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <DoorOpen className="w-4 h-4" />
-          Door Status
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {doorSensors.map((sensor, i) => (
-            <SensorCard key={sensor.id} sensor={sensor} index={i} />
-          ))}
-        </div>
-      </div>
-
-      {/* Motion & Pressure Section */}
-      {motionPressureSensors.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Motion &amp; Pressure Sensors
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {motionPressureSensors.map((sensor, i) => (
-              <SensorCard key={sensor.id} sensor={sensor} index={i} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 }

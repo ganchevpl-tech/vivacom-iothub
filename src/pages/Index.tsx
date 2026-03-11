@@ -19,6 +19,7 @@ import { SensorGrid } from '@/components/dashboard/SensorGrid';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
 import { FloorPlan } from '@/components/dashboard/FloorPlan';
 import { LogManager } from '@/components/dashboard/LogManager';
+import { GoogleMapsView } from '@/components/dashboard/GoogleMapsView';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { DashboardToolbar } from '@/components/dashboard/DashboardToolbar';
 import { SortableWidget } from '@/components/dashboard/SortableWidget';
@@ -88,6 +89,11 @@ const Index = () => {
     ),
     floorplan: (
       <FloorPlan sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings} isConnected={isConnected} />
+    ),
+    google_maps: (
+      <FeatureGate feature="google_maps" organizationId={currentOrganizationId ?? undefined}>
+        <GoogleMapsView />
+      </FeatureGate>
     ),
     logs: (
       <FeatureGate feature="log_viewer" organizationId={currentOrganizationId ?? undefined}>
