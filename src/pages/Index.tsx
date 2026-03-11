@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout/dist/legacy.mjs';
+import RGL from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+
+// @ts-ignore - WidthProvider and Responsive are available on the default export
+const ResponsiveGridLayout = RGL.WidthProvider(RGL.Responsive);
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { SensorGrid } from '@/components/dashboard/SensorGrid';
