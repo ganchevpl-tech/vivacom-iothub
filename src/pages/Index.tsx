@@ -22,7 +22,7 @@ import { Cpu, AlertTriangle, Users, Wifi, WifiOff, GripVertical } from 'lucide-r
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
-const ResponsiveGridLayout = WidthProvider(Responsive);
+
 
 const Index = () => {
   const { currentOrganizationId } = useAuth();
