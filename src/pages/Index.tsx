@@ -19,7 +19,7 @@ import { SensorGrid } from '@/components/dashboard/SensorGrid';
 import { AccessControlList } from '@/components/dashboard/AccessControlList';
 import { FloorPlan } from '@/components/dashboard/FloorPlan';
 import { LogManager } from '@/components/dashboard/LogManager';
-import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { GoogleMapsView } from '@/components/dashboard/GoogleMapsView';
 import { DashboardToolbar } from '@/components/dashboard/DashboardToolbar';
 import { SortableWidget } from '@/components/dashboard/SortableWidget';
 import { FeatureGate } from '@/components/FeatureGate';
