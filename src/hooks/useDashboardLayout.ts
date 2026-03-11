@@ -2,23 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface WidgetLayout {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  minW?: number;
-  minH?: number;
-}
-
-export const DEFAULT_LAYOUT: WidgetLayout[] = [
-  { i: 'stats',         x: 0,  y: 0,  w: 12, h: 3,  minW: 6,  minH: 3 },
-  { i: 'sensors',       x: 0,  y: 3,  w: 8,  h: 8,  minW: 4,  minH: 4 },
-  { i: 'access',        x: 8,  y: 3,  w: 4,  h: 8,  minW: 3,  minH: 4 },
-  { i: 'floorplan',     x: 0,  y: 11, w: 8,  h: 7,  minW: 4,  minH: 4 },
-  { i: 'logs',          x: 0,  y: 18, w: 12, h: 7,  minW: 6,  minH: 4 },
-];
+export const DEFAULT_WIDGET_ORDER = ['stats', 'sensors', 'access', 'floorplan', 'logs'];
 
 export const WIDGET_LABELS: Record<string, string> = {
   stats: 'Статистики',
@@ -29,16 +13,17 @@ export const WIDGET_LABELS: Record<string, string> = {
 };
 
 interface UseDashboardLayoutReturn {
-  layout: WidgetLayout[];
+  widgetOrder: string[];
   isEditing: boolean;
   isSaving: boolean;
   setIsEditing: (v: boolean) => void;
-  onLayoutChange: (newLayout: WidgetLayout[]) => void;
+  setWidgetOrder: (order: string[]) => void;
+  saveOrder: (order: string[]) => void;
   resetLayout: () => void;
 }
 
 export function useDashboardLayout(): UseDashboardLayoutReturn {
-  const [layout, setLayout] = useState<WidgetLayout[]>(DEFAULT_LAYOUT);
+  const [widgetOrder, setWidgetOrder] = useState<string[]>(DEFAULT_WIDGET_ORDER);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -57,15 +42,23 @@ export function useDashboardLayout(): UseDashboardLayoutReturn {
         .eq('user_id', user.id)
         .single();
 
-      if (data && !error && Array.isArray(data.layout_data) && data.layout_data.length > 0) {
-        setLayout(data.layout_data as WidgetLayout[]);
+      if (data && !error) {
+        const stored = data.layout_data;
+        // Support both old format (array of objects with .i) and new format (array of strings)
+        if (Array.isArray(stored) && stored.length > 0) {
+          if (typeof stored[0] === 'string') {
+            setWidgetOrder(stored as string[]);
+          } else if (stored[0]?.i) {
+            setWidgetOrder(stored.map((item: any) => item.i));
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to load dashboard layout:', err);
     }
   };
 
-  const saveLayout = useCallback(async (newLayout: WidgetLayout[]) => {
+  const saveOrder = useCallback(async (order: string[]) => {
     setIsSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -75,7 +68,7 @@ export function useDashboardLayout(): UseDashboardLayoutReturn {
         .from('user_dashboard_layouts')
         .upsert({
           user_id: user.id,
-          layout_data: newLayout,
+          layout_data: order,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
@@ -88,29 +81,11 @@ export function useDashboardLayout(): UseDashboardLayoutReturn {
     }
   }, []);
 
-  const onLayoutChange = useCallback((newLayout: WidgetLayout[]) => {
-    // Merge minW/minH from defaults since react-grid-layout strips them
-    const merged = newLayout.map(item => {
-      const def = DEFAULT_LAYOUT.find(d => d.i === item.i);
-      return {
-        i: item.i,
-        x: item.x,
-        y: item.y,
-        w: item.w,
-        h: item.h,
-        minW: def?.minW ?? item.minW,
-        minH: def?.minH ?? item.minH,
-      };
-    });
-    setLayout(merged);
-    saveLayout(merged);
-  }, [saveLayout]);
-
   const resetLayout = useCallback(() => {
-    setLayout(DEFAULT_LAYOUT);
-    saveLayout(DEFAULT_LAYOUT);
+    setWidgetOrder(DEFAULT_WIDGET_ORDER);
+    saveOrder(DEFAULT_WIDGET_ORDER);
     toast.success('Оформлението е нулирано');
-  }, [saveLayout]);
+  }, [saveOrder]);
 
-  return { layout, isEditing, isSaving, setIsEditing, onLayoutChange, resetLayout };
+  return { widgetOrder, isEditing, isSaving, setIsEditing, setWidgetOrder, saveOrder, resetLayout };
 }
