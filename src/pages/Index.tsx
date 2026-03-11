@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
-import ReactGridLayout from 'react-grid-layout';
+import { Responsive, WidthProvider } from 'react-grid-layout/dist/legacy.mjs';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-
-const { Responsive, WidthProvider } = ReactGridLayout as any;
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { SensorGrid } from '@/components/dashboard/SensorGrid';
