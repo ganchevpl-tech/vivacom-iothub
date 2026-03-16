@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { Thermometer, Droplets, DoorOpen, DoorClosed, AlertTriangle, GripVertical } from 'lucide-react';
+import { Thermometer, Droplets, DoorOpen, DoorClosed, TriangleAlert as AlertTriangle, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SensorReading } from '@/types/dashboard';
 import { Skeleton } from '@/components/ui/skeleton';

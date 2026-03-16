@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Download, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Download, CircleCheck as CheckCircle2, Circle as XCircle, TriangleAlert as AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogEntry } from '@/types/dashboard';
 import { Input } from '@/components/ui/input';

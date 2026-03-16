@@ -9,6 +9,7 @@ import AccessControl from "./pages/AccessControl";
 import TimeManagement from "./pages/TimeManagement";
 import Logs from "./pages/Logs";
 import Settings from "./pages/Settings";
+import Fleet from "./pages/Fleet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/access-control" element={<AccessControl />} />
             <Route path="/time-management" element={<TimeManagement />} />
+            <Route path="/fleet" element={<Fleet />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

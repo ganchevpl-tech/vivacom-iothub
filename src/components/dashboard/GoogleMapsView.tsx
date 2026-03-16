@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader as Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 declare global {

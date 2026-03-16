@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { GripVertical, RotateCcw, Lock, Unlock, Loader2 } from 'lucide-react';
+import { GripVertical, RotateCcw, Lock, Clock as Unlock, Loader as Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

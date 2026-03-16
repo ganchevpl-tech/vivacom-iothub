@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Moon, AlertTriangle, Clock, MapPin } from 'lucide-react';
+import { Moon, TriangleAlert as AlertTriangle, Clock, MapPin } from 'lucide-react';
 
 interface AttendanceTableProps {
   data: CalculatedAttendance[];

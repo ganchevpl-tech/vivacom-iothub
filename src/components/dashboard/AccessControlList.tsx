@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, CreditCard, Fingerprint, KeyRound, Smartphone } from 'lucide-react';
+import { CircleCheck as CheckCircle2, Circle as XCircle, CreditCard, Fingerprint, KeyRound, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccessEntry } from '@/types/dashboard';
 import { formatDistanceToNow } from 'date-fns';

@@ -24,7 +24,7 @@ import {
 } from '@/data/safetyMockData';
 import { calculateAttendance, calculateLocationHours } from '@/utils/laborCalculations';
 import { LABOR_CONSTANTS } from '@/types/labor';
-import { Clock, Users, Moon, AlertTriangle, Shield, UserCheck, Briefcase, HeartPulse } from 'lucide-react';
+import { Clock, Users, Moon, TriangleAlert as AlertTriangle, Shield, UserCheck, Briefcase, HeartPulse } from 'lucide-react';
 
 const TimeManagement = () => {
   const [activeView, setActiveView] = useState<'hr' | 'safety'>('hr');

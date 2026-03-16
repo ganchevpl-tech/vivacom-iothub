@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SafetyAlert, ID_METHOD_ICONS, ZONE_COLORS } from '@/types/safety';
-import { AlertTriangle, X, Bell, MapPin } from 'lucide-react';
+import { TriangleAlert as AlertTriangle, X, Bell, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PanicAlertBannerProps {

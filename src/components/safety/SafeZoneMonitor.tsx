@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SafeZone, SafetyAlert, ZONE_COLORS, ID_METHOD_ICONS } from '@/types/safety';
-import { Shield, AlertTriangle, DoorOpen, Lock, MapPin } from 'lucide-react';
+import { Shield, TriangleAlert as AlertTriangle, DoorOpen, Lock, MapPin } from 'lucide-react';
 import {
   Table,
   TableBody,

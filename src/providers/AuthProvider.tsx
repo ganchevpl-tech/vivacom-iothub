@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, LogOut, Eye, AlertTriangle } from 'lucide-react';
+import { Shield, LogOut, Eye, TriangleAlert as AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export type UserRole = 'super_admin' | 'admin' | 'hr_manager' | 'medical_staff' | 'security' | 'viewer';

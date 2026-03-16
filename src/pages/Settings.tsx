@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, Bell, Shield, Database, Wifi, Moon, Sun, Save, Loader2, MessageSquare, Phone, Send } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Shield, Database, Wifi, Moon, Sun, Save, Loader as Loader2, MessageSquare, Phone, Send } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';

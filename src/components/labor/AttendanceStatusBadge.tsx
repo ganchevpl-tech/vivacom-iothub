@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { AttendanceStatus } from '@/types/labor';
-import { CheckCircle, Moon, AlertTriangle, Clock } from 'lucide-react';
+import { CircleCheck as CheckCircle, Moon, TriangleAlert as AlertTriangle, Clock } from 'lucide-react';
 
 interface AttendanceStatusBadgeProps {
   status: AttendanceStatus;

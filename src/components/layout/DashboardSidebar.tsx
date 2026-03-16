@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  ShieldCheck, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  ShieldCheck,
+  FileText,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Wifi,
   Menu,
-  Clock
+  Clock,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/access-control', label: 'Access Control', icon: ShieldCheck },
   { path: '/time-management', label: 'Time Management', icon: Clock },
+  { path: '/fleet', label: 'Fleet', icon: Truck },
   { path: '/logs', label: 'Logs', icon: FileText },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];

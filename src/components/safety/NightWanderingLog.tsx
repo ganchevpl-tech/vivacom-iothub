@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { NightWanderingEvent, ID_METHOD_ICONS } from '@/types/safety';
-import { Moon, CheckCircle, Clock } from 'lucide-react';
+import { Moon, CircleCheck as CheckCircle, Clock } from 'lucide-react';
 
 interface NightWanderingLogProps {
   events: NightWanderingEvent[];

@@ -28,7 +28,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { mockStats, mockSensorReadings, mockAccessEntries, mockLogEntries } from '@/data/mockData';
 import { useFlespiData } from '@/hooks/useFlespiData';
-import { Cpu, AlertTriangle, Users, Wifi, WifiOff } from 'lucide-react';
+import { Cpu, TriangleAlert as AlertTriangle, Users, Wifi, WifiOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
