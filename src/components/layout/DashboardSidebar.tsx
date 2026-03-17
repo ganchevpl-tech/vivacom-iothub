@@ -32,7 +32,8 @@ const navItems = [
 
 export function DashboardSidebar({ collapsed, onCollapse }: SidebarProps) {
   const location = useLocation();
-  
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.role === 'super_admin';
   return (
     <motion.aside
       initial={false}
