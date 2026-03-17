@@ -80,7 +80,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-          <SensorGrid sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings} isConnected={isConnected} />
+         <SensorGrid sensors={liveSensors} isConnected={isConnected} />
         </div>
       </FeatureGate>
     ),
@@ -88,7 +88,7 @@ const Index = () => {
       <AccessControlList entries={mockAccessEntries} />
     ),
     floorplan: (
-      <FloorPlan sensors={liveSensors.length > 0 ? liveSensors : mockSensorReadings} isConnected={isConnected} />
+      <FloorPlan sensors={liveSensors} isConnected={isConnected} />
     ),
     google_maps: (
       <FeatureGate feature="google_maps" organizationId={currentOrganizationId ?? undefined}>
