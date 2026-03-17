@@ -105,6 +105,36 @@ export function DashboardSidebar({ collapsed, onCollapse }: SidebarProps) {
         })}
       </nav>
 
+    {/* Super Admin */}
+      {isSuperAdmin && (
+        <div className="px-3 pb-2">
+          <NavLink
+            to="/super-admin"
+            className={cn(
+              'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group',
+              'hover:bg-sidebar-accent',
+              location.pathname === '/super-admin'
+                ? 'bg-destructive text-destructive-foreground shadow-lg'
+                : 'text-sidebar-foreground'
+            )}
+          >
+            <Shield className="w-5 h-5 flex-shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-medium whitespace-nowrap overflow-hidden"
+                >
+                  Super Admin
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </NavLink>
+        </div>
+      )}
       {/* Connection Status */}
       <div className="px-3 pb-4">
         <div className={cn(
