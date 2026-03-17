@@ -10,6 +10,7 @@ import TimeManagement from "./pages/TimeManagement";
 import Logs from "./pages/Logs";
 import Settings from "./pages/Settings";
 import Fleet from "./pages/Fleet";
+import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/fleet" element={<Fleet />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
