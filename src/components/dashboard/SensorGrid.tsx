@@ -128,7 +128,7 @@ function SensorCardInner({ sensor, index, isLive = false }: SensorCardProps) {
       </div>
 
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-foreground">
+       <p className="text-sm font-semibold text-foreground">
   {sensor.id.includes('sensors_for_temp') ? 'Дневна' :
    sensor.id.includes('plami') ? 'Спалня Плами' :
    sensor.id.includes('sonoff') ? 'Спалня' :
