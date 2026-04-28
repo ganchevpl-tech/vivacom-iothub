@@ -138,10 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadProfile();
       }, 0);
 
-      // Audit successful logins (fire-and-forget, no PII in client logs)
-      if (event === 'SIGNED_IN') {
-        // Audit logging happens via edge function below
-      }
+      // Server-side audit (fire-and-forget)
+      if (event === 'SIGNED_IN') logAuthEvent('login_success');
+      if (event === 'SIGNED_OUT') logAuthEvent('logout');
+      if (event === 'PASSWORD_RECOVERY') logAuthEvent('password_reset_requested');
+      if (event === 'USER_UPDATED') logAuthEvent('password_changed');
+      if (event === 'MFA_CHALLENGE_VERIFIED') logAuthEvent('mfa_challenge_success');
     });
 
     loadProfile();
