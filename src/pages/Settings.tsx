@@ -259,13 +259,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Two-Factor Authentication</Label>
-                <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-              </div>
-              <Switch />
-            </div>
+            <MfaSettings />
             <Separator />
             <div className="flex items-center justify-between">
               <div>
