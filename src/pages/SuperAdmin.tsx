@@ -65,6 +65,7 @@ export default function SuperAdmin() {
 
   return (
     <DashboardLayout title="Super Admin" subtitle="Управление на платформата">
+      <AdminMfaGate>
       <div className="space-y-6">
 
         {/* Tabs */}
