@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface SidebarProps {
   collapsed: boolean;
