@@ -11,7 +11,8 @@ import {
   Wifi,
   Menu,
   Clock,
-  Truck
+  Truck,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
