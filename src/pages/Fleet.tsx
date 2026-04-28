@@ -6,13 +6,27 @@ import { UnitsPanel } from '@/components/fleet/UnitsPanel';
 import { VehicleDetailPanel } from '@/components/fleet/VehicleDetailPanel';
 import { FleetMap } from '@/components/fleet/FleetMap';
 import { mockVehicles, mockFleetStats } from '@/data/fleetMockData';
-import type { LeftPanelTab } from '@/types/fleet';
+import { useFleetData } from '@/hooks/useFleetData';
+import type { LeftPanelTab, FleetStats } from '@/types/fleet';
 import 'leaflet/dist/leaflet.css';
 
 const Fleet = () => {
   const { currentOrganizationId } = useAuth();
   const [activeTab, setActiveTab] = useState<LeftPanelTab>('units');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>();
+
+  const { vehicles: liveVehicles, isLoading, error, lastUpdate } = useFleetData();
+
+  // Use live data if available, otherwise mock for demo
+  const vehicles = liveVehicles.length > 0 ? liveVehicles : mockVehicles;
+  const stats: FleetStats = liveVehicles.length > 0
+    ? {
+        totalVehicles: vehicles.length,
+        onlineNow: vehicles.filter((v) => v.status !== 'offline').length,
+        inMotion: vehicles.filter((v) => v.status === 'moving').length,
+        activeAlerts: 0,
+      }
+    : mockFleetStats;
 
   const selectedVehicle = mockVehicles.find((v) => v.id === selectedVehicleId);
 
