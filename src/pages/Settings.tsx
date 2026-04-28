@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MfaSettings } from '@/components/security/MfaSettings';
 
 interface NotificationSettings {
   browser_push: boolean;
