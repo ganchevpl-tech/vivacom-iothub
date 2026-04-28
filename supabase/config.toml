@@ -1,4 +1,9 @@
 project_id = "yvfxpyxjmftpinwytklu"
 
+# Zero Trust: require JWT verification on all functions by default.
+# JWTs are also explicitly re-validated in code via getClaims() for defense in depth.
 [functions.flespi-telemetry]
-verify_jwt = false
+verify_jwt = true
+
+[functions.auth-audit]
+verify_jwt = true
