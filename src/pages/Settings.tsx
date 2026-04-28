@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MfaSettings } from '@/components/security/MfaSettings';
 
 interface NotificationSettings {
   browser_push: boolean;
@@ -258,13 +259,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Two-Factor Authentication</Label>
-                <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-              </div>
-              <Switch />
-            </div>
+            <MfaSettings />
             <Separator />
             <div className="flex items-center justify-between">
               <div>

@@ -20,27 +20,16 @@ export function useFleetData(): UseFleetDataReturn {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('flespi-telemetry', {
-        body: null,
+      // Use supabase.functions.invoke — automatically attaches the user's
+      // JWT (Zero Trust: edge function re-validates it via getClaims()).
+      const { data, error: fnError } = await supabase.functions.invoke('flespi-telemetry?type=fleet', {
         method: 'GET',
-        // Pass query param via headers since invoke doesn't support query in all SDK versions
       });
 
-      // Fallback: direct fetch with query param
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/flespi-telemetry?type=fleet`;
-      const res = await fetch(url, {
-        headers: {
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-      });
-      const json = await res.json();
+      if (fnError) throw fnError;
+      if (!data?.success) throw new Error(data?.error || 'Failed to fetch fleet data');
 
-      if (!json.success) {
-        throw new Error(json.error || 'Failed to fetch fleet data');
-      }
-
-      const mapped: Vehicle[] = (json.vehicles ?? []).map((v: any) => ({
+      const mapped: Vehicle[] = (data.vehicles ?? []).map((v: any) => ({
         ...v,
         lastUpdate: v.lastUpdate ? new Date(v.lastUpdate) : new Date(),
       }));

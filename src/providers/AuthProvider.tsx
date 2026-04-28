@@ -1,10 +1,20 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, LogOut, Eye, TriangleAlert as AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { logAuthEvent } from '@/lib/authAudit';
 
 export type UserRole = 'super_admin' | 'admin' | 'hr_manager' | 'medical_staff' | 'security' | 'viewer';
+
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  super_admin: 100,
+  admin: 80,
+  hr_manager: 60,
+  medical_staff: 60,
+  security: 60,
+  viewer: 20,
+};
 
 export interface Organization {
   id: string;
@@ -17,9 +27,12 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
+  /** Highest-tier role (derived from user_roles table). DO NOT mutate this. */
   role: UserRole;
   organization_id: string | null;
   organization?: Organization;
+  mfa_enabled?: boolean;
+  last_sign_in_at?: string | null;
 }
 
 export interface ImpersonationSession {
@@ -33,13 +46,21 @@ export interface ImpersonationSession {
 
 interface AuthContextValue {
   profile: UserProfile | null;
+  /** All roles assigned to the current user (Zero Trust: never trust a single role). */
+  roles: UserRole[];
+  /** Whether the current session has passed MFA (AAL2). */
+  aalLevel: 'aal1' | 'aal2' | null;
   isLoading: boolean;
   isSuperAdmin: boolean;
+  isAdmin: boolean;
+  hasRole: (role: UserRole) => boolean;
+  hasMinRole: (role: UserRole) => boolean;
   impersonation: ImpersonationSession | null;
   isImpersonating: boolean;
   startImpersonation: (org: Organization, reason: string) => Promise<void>;
   stopImpersonation: () => void;
   currentOrganizationId: string | null;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -50,48 +71,101 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
+function computeHighestRole(roles: UserRole[]): UserRole {
+  if (roles.length === 0) return 'viewer';
+  return roles.reduce((highest, r) =>
+    ROLE_HIERARCHY[r] > ROLE_HIERARCHY[highest] ? r : highest
+  , 'viewer' as UserRole);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [aalLevel, setAalLevel] = useState<'aal1' | 'aal2' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [impersonation, setImpersonation] = useState<ImpersonationSession | null>(null);
 
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setIsLoading(false); return; }
+  const loadProfile = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setProfile(null);
+        setRoles([]);
+        setAalLevel(null);
+        return;
+      }
 
-        const { data, error } = await (supabase as any)
+      // Load profile + roles in parallel (Zero Trust: separate concerns)
+      const [profileRes, rolesRes, aalRes] = await Promise.all([
+        (supabase as any)
           .from('profiles')
           .select(`
-            id, email, full_name, role, organization_id,
+            id, email, full_name, organization_id, mfa_enabled, last_sign_in_at,
             organization:organizations(id, name, contact_email, created_at)
           `)
           .eq('id', user.id)
-          .single();
+          .maybeSingle(),
+        (supabase as any)
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id),
+        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      ]);
 
-        if (error) throw error;
-        setProfile(data as UserProfile);
-      } catch (err) {
-        console.error('[AuthProvider] Failed to load profile:', err);
-      } finally {
-        setIsLoading(false);
-      }
+      if (profileRes.error) throw profileRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+
+      const userRoles = (rolesRes.data ?? []).map((r: { role: UserRole }) => r.role);
+      const highest = computeHighestRole(userRoles);
+
+      setRoles(userRoles);
+      setProfile(profileRes.data ? { ...profileRes.data, role: highest } : null);
+      setAalLevel(aalRes.data?.currentLevel as 'aal1' | 'aal2' | null);
+    } catch (err) {
+      console.error('[AuthProvider] Failed to load profile:', err);
+      setProfile(null);
+      setRoles([]);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      loadProfile();
+  useEffect(() => {
+    // Order matters: subscribe FIRST, then check session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Defer to next tick to avoid deadlocks per Supabase docs
+      setTimeout(() => {
+        loadProfile();
+      }, 0);
+
+      // Server-side audit (fire-and-forget)
+      if (event === 'SIGNED_IN') logAuthEvent('login_success');
+      if (event === 'SIGNED_OUT') logAuthEvent('logout');
+      if (event === 'PASSWORD_RECOVERY') logAuthEvent('password_reset_requested');
+      if (event === 'USER_UPDATED') logAuthEvent('password_changed');
+      if (event === 'MFA_CHALLENGE_VERIFIED') logAuthEvent('mfa_challenge_success');
     });
 
     loadProfile();
-
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadProfile]);
 
-  const isSuperAdmin = profile?.role === 'super_admin';
+  const isSuperAdmin = roles.includes('super_admin');
+  const isAdmin = isSuperAdmin || roles.includes('admin');
+
+  const hasRole = useCallback((role: UserRole) => roles.includes(role), [roles]);
+  const hasMinRole = useCallback((role: UserRole) => {
+    if (roles.length === 0) return false;
+    const userMax = Math.max(...roles.map((r) => ROLE_HIERARCHY[r]));
+    return userMax >= ROLE_HIERARCHY[role];
+  }, [roles]);
 
   const startImpersonation = async (org: Organization, reason: string) => {
     if (!isSuperAdmin || !profile) return;
+    if (!reason.trim() || reason.trim().length < 10) {
+      console.warn('[AuthProvider] Impersonation requires a reason >= 10 chars');
+      return;
+    }
 
     await (supabase as any).from('super_admin_audit_log').insert({
       super_admin_id: profile.id,
@@ -99,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       action: 'impersonation_start',
       target_organization_id: org.id,
       target_organization_name: org.name,
-      reason,
+      reason: reason.trim().slice(0, 500),
       timestamp: new Date().toISOString(),
     });
 
@@ -129,6 +203,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setImpersonation(null);
   };
 
+  const signOut = useCallback(async () => {
+    setImpersonation(null);
+    await supabase.auth.signOut();
+    setProfile(null);
+    setRoles([]);
+    setAalLevel(null);
+  }, []);
+
   const currentOrganizationId = impersonation
     ? impersonation.targetOrganizationId
     : profile?.organization_id ?? null;
@@ -136,13 +218,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       profile,
+      roles,
+      aalLevel,
       isLoading,
       isSuperAdmin,
+      isAdmin,
+      hasRole,
+      hasMinRole,
       impersonation,
       isImpersonating: !!impersonation,
       startImpersonation,
       stopImpersonation,
       currentOrganizationId,
+      signOut,
     }}>
       {children}
       <ImpersonationBanner />
@@ -191,7 +279,7 @@ export function ImpersonateDialog({ organization, onClose }: { organization: Org
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStart = async () => {
-    if (!reason.trim()) return;
+    if (reason.trim().length < 10) return;
     setIsLoading(true);
     await startImpersonation(organization, reason.trim());
     setIsLoading(false);
@@ -223,11 +311,11 @@ export function ImpersonateDialog({ organization, onClose }: { organization: Org
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Всички действия се записват в одит лога. Въведи причина за влизането.
+          Всички действия се записват в одит лога. Въведи причина (мин. 10 символа).
         </p>
         <textarea
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
+          onChange={(e) => setReason(e.target.value.slice(0, 500))}
           placeholder="Причина: напр. 'Клиентът съобщи за грешка в HR модула'"
           className="w-full rounded-lg border border-border bg-muted/30 p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring mb-4"
           rows={3}
@@ -236,7 +324,7 @@ export function ImpersonateDialog({ organization, onClose }: { organization: Org
           <Button variant="outline" onClick={onClose} className="flex-1">Отказ</Button>
           <Button
             onClick={handleStart}
-            disabled={!reason.trim() || isLoading}
+            disabled={reason.trim().length < 10 || isLoading}
             className="flex-1 bg-status-alert hover:bg-status-alert/90 text-white gap-2"
           >
             <Shield className="w-4 h-4" />
@@ -248,23 +336,11 @@ export function ImpersonateDialog({ organization, onClose }: { organization: Org
   );
 }
 
-const ROLE_HIERARCHY: Record<UserRole, number> = {
-  super_admin: 100,
-  admin: 80,
-  hr_manager: 60,
-  medical_staff: 60,
-  security: 60,
-  viewer: 20,
-};
-
 export function RoleGate({ requiredRole, children, fallback }: { requiredRole: UserRole; children: ReactNode; fallback?: ReactNode }) {
-  const { profile, isLoading } = useAuth();
+  const { hasMinRole, isLoading } = useAuth();
 
   if (isLoading) return <div className="animate-pulse rounded-xl bg-muted/30 w-full h-32" />;
-  if (!profile) return null;
-
-  const hasAccess = ROLE_HIERARCHY[profile.role] >= ROLE_HIERARCHY[requiredRole];
-  if (!hasAccess) return fallback ? <>{fallback}</> : null;
+  if (!hasMinRole(requiredRole)) return fallback ? <>{fallback}</> : null;
 
   return <>{children}</>;
 }

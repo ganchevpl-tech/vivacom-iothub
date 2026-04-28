@@ -3,6 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ============= Zero Trust security headers ============= -->
+    <!-- Content Security Policy: whitelist allowed sources -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: blob: https: ;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.tile.openstreetmap.org https://maps.googleapis.com https://*.googleapis.com https://flespi.io;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self';
+      object-src 'none';
+      upgrade-insecure-requests;
+    " />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta name="permissions-policy" content="geolocation=(self), microphone=(), camera=(), payment=()" />
+
     <title>Vivacom IoT Dashboard | Enterprise Monitoring</title>
     <meta name="description" content="Enterprise IoT Dashboard for real-time monitoring, access control, and smart sensor management by Vivacom." />
     <meta name="author" content="Vivacom" />
