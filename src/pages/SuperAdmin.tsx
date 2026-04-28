@@ -176,6 +176,7 @@ export default function SuperAdmin() {
           onClose={() => setImpersonateOrg(null)}
         />
       )}
+      </AdminMfaGate>
     </DashboardLayout>
   );
 }
