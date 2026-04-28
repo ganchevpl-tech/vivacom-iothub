@@ -35,6 +35,7 @@ export const FEATURE_LABELS: Record<Feature, string> = {
   api_access:          'API достъп',
   custom_reports:      'Персонализирани отчети',
   google_maps:         'Google Maps изглед',
+  fleet_management:    'Управление на автопарк',
 };
 
 export const DEFAULT_FEATURES: Feature[] = [
