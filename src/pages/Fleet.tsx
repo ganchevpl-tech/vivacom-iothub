@@ -28,7 +28,7 @@ const Fleet = () => {
       }
     : mockFleetStats;
 
-  const selectedVehicle = mockVehicles.find((v) => v.id === selectedVehicleId);
+  const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
 
   const handleVehicleSelect = useCallback((vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
@@ -37,31 +37,43 @@ const Fleet = () => {
   return (
     <FeatureGate feature="fleet_management" organizationId={currentOrganizationId ?? undefined}>
       <div className="w-screen h-screen bg-background overflow-hidden">
-        {/* Map Container */}
         <FleetMap
-          vehicles={mockVehicles}
+          vehicles={vehicles}
           selectedVehicleId={selectedVehicleId}
           onVehicleSelect={handleVehicleSelect}
         />
 
-        {/* Left Icon Bar */}
         <LeftIconBar
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          alertCount={mockFleetStats.activeAlerts}
+          alertCount={stats.activeAlerts}
         />
 
-        {/* Left Panel - Units */}
+        <div className="absolute top-4 right-4 z-[1000] px-3 py-1.5 rounded-md bg-card/95 backdrop-blur border text-xs space-y-0.5 shadow-lg">
+          {isLoading && <div className="text-muted-foreground">Зареждане…</div>}
+          {!isLoading && liveVehicles.length > 0 && (
+            <div className="text-green-600 font-medium">● На живо ({liveVehicles.length})</div>
+          )}
+          {!isLoading && liveVehicles.length === 0 && (
+            <div className="text-amber-600 font-medium">⚠ Демо данни</div>
+          )}
+          {error && <div className="text-destructive max-w-[200px] truncate">{error}</div>}
+          {lastUpdate && (
+            <div className="text-muted-foreground">
+              {lastUpdate.toLocaleTimeString('bg-BG')}
+            </div>
+          )}
+        </div>
+
         {activeTab === 'units' && (
           <UnitsPanel
-            vehicles={mockVehicles}
+            vehicles={vehicles}
             selectedVehicleId={selectedVehicleId}
             onVehicleSelect={handleVehicleSelect}
-            stats={mockFleetStats}
+            stats={stats}
           />
         )}
 
-        {/* Right Panel - Vehicle Details */}
         {selectedVehicle && activeTab === 'units' && (
           <VehicleDetailPanel
             vehicle={selectedVehicle}
