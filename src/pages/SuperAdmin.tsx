@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Shield, Building2, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navigate } from 'react-router-dom';
+import { AdminMfaGate } from '@/components/security/AdminMfaGate';
 
 const FEATURES = [
   { key: 'basic_sensors', label: 'Основни сензори' },
