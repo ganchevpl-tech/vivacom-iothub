@@ -34,61 +34,59 @@ const Fleet = () => {
   }, []);
 
   return (
-    <FeatureGate feature="fleet_management" organizationId={currentOrganizationId ?? undefined}>
-      <div className="w-screen h-screen bg-background overflow-hidden">
-        <FleetMap
+    <div className="w-screen h-screen bg-background overflow-hidden">
+      <FleetMap
+        vehicles={vehicles}
+        selectedVehicleId={selectedVehicleId}
+        onVehicleSelect={handleVehicleSelect}
+      />
+
+      <LeftIconBar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        alertCount={stats.activeAlerts}
+      />
+
+      <div className="absolute top-4 right-4 z-[1000] px-3 py-1.5 rounded-md bg-card/95 backdrop-blur border text-xs space-y-0.5 shadow-lg">
+        {isLoading && <div className="text-muted-foreground">Зареждане…</div>}
+        {!isLoading && liveVehicles.length > 0 && (
+          <div className="text-green-600 font-medium">● На живо ({liveVehicles.length})</div>
+        )}
+        {!isLoading && liveVehicles.length === 0 && (
+          <div className="text-amber-600 font-medium">⚠ Демо данни</div>
+        )}
+        {error && <div className="text-destructive max-w-[200px] truncate">{error}</div>}
+        {lastUpdate && (
+          <div className="text-muted-foreground">
+            {lastUpdate.toLocaleTimeString('bg-BG')}
+          </div>
+        )}
+      </div>
+
+      {activeTab === 'units' && (
+        <UnitsPanel
           vehicles={vehicles}
           selectedVehicleId={selectedVehicleId}
           onVehicleSelect={handleVehicleSelect}
+          stats={stats}
         />
+      )}
 
-        <LeftIconBar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          alertCount={stats.activeAlerts}
+      {selectedVehicle && activeTab === 'units' && (
+        <VehicleDetailPanel
+          vehicle={selectedVehicle}
+          onClose={() => setSelectedVehicleId(undefined)}
         />
+      )}
 
-        <div className="absolute top-4 right-4 z-[1000] px-3 py-1.5 rounded-md bg-card/95 backdrop-blur border text-xs space-y-0.5 shadow-lg">
-          {isLoading && <div className="text-muted-foreground">Зареждане…</div>}
-          {!isLoading && liveVehicles.length > 0 && (
-            <div className="text-green-600 font-medium">● На живо ({liveVehicles.length})</div>
-          )}
-          {!isLoading && liveVehicles.length === 0 && (
-            <div className="text-amber-600 font-medium">⚠ Демо данни</div>
-          )}
-          {error && <div className="text-destructive max-w-[200px] truncate">{error}</div>}
-          {lastUpdate && (
-            <div className="text-muted-foreground">
-              {lastUpdate.toLocaleTimeString('bg-BG')}
-            </div>
-          )}
-        </div>
+      {activeTab === 'ev-readiness' && (
+        <EVReadinessPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
+      )}
 
-        {activeTab === 'units' && (
-          <UnitsPanel
-            vehicles={vehicles}
-            selectedVehicleId={selectedVehicleId}
-            onVehicleSelect={handleVehicleSelect}
-            stats={stats}
-          />
-        )}
-
-        {selectedVehicle && activeTab === 'units' && (
-          <VehicleDetailPanel
-            vehicle={selectedVehicle}
-            onClose={() => setSelectedVehicleId(undefined)}
-          />
-        )}
-
-        {activeTab === 'ev-readiness' && (
-          <EVReadinessPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
-        )}
-
-        {activeTab === 'carbon' && (
-          <CarbonReportPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
-        )}
-      </div>
-    </FeatureGate>
+      {activeTab === 'carbon' && (
+        <CarbonReportPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
+      )}
+    </div>
   );
 };
 
