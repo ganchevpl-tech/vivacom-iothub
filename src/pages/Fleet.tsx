@@ -5,6 +5,8 @@ import { LeftIconBar } from '@/components/fleet/LeftIconBar';
 import { UnitsPanel } from '@/components/fleet/UnitsPanel';
 import { VehicleDetailPanel } from '@/components/fleet/VehicleDetailPanel';
 import { FleetMap } from '@/components/fleet/FleetMap';
+import { EVReadinessPanel } from '@/components/fleet/EVReadinessPanel';
+import { CarbonReportPanel } from '@/components/fleet/CarbonReportPanel';
 import { mockVehicles, mockFleetStats } from '@/data/fleetMockData';
 import { useFleetData } from '@/hooks/useFleetData';
 import type { LeftPanelTab, FleetStats } from '@/types/fleet';
@@ -79,6 +81,14 @@ const Fleet = () => {
             vehicle={selectedVehicle}
             onClose={() => setSelectedVehicleId(undefined)}
           />
+        )}
+
+        {activeTab === 'ev-readiness' && (
+          <EVReadinessPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
+        )}
+
+        {activeTab === 'carbon' && (
+          <CarbonReportPanel vehicles={vehicles} onClose={() => setActiveTab('units')} />
         )}
       </div>
     </FeatureGate>
