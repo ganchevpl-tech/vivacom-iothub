@@ -1,6 +1,4 @@
 import { useState, useCallback } from 'react';
-import { FeatureGate } from '@/components/FeatureGate';
-import { useAuth } from '@/providers/AuthProvider';
 import { LeftIconBar } from '@/components/fleet/LeftIconBar';
 import { UnitsPanel } from '@/components/fleet/UnitsPanel';
 import { VehicleDetailPanel } from '@/components/fleet/VehicleDetailPanel';
