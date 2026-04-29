@@ -43,13 +43,19 @@ function mapDeviceToVehicle(device: any) {
   const ignition = t["engine.ignition.status"]?.value ?? false;
   const ts = t["position.latitude"]?.ts ?? t["timestamp"]?.value ?? null;
 
+  // Светофар логика:
+  //  🟢 moving       — движи се (скорост > 5 km/h)
+  //  🟡 idle         — спрян, но двигателят е запален (ключ в гнездото)
+  //  🔴 parked-short — спрян и двигателят е изгасен (< 30 мин)
+  //  🔴 parked-long  — спрян и двигателят е изгасен (> 30 мин)
+  //  ⚫ offline      — няма данни > 1 час
   let status: string = "offline";
   const ageSec = ts ? (Date.now() / 1000 - ts) : Infinity;
   if (ageSec > 3600) status = "offline";
   else if (speed > 5) status = "moving";
-  else if (ignition) status = "idle";
-  else if (ageSec < 1800) status = "parked-short";
-  else status = "parked-long";
+  else if (ignition) status = "idle";          // двигател работи, колата стои
+  else if (ageSec < 1800) status = "parked-short"; // изгасен, наскоро
+  else status = "parked-long";                  // изгасен, отдавна
 
   return {
     id: String(device.id),
