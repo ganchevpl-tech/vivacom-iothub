@@ -8,18 +8,19 @@ interface FleetMapProps {
   onVehicleSelect: (vehicleId: string) => void;
 }
 
+// Светофар: зелено=движение, жълто=idle (двигател работи), червено=изгасен
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'moving':
-      return '#22c55e';
+      return '#22c55e'; // 🟢 зелено
     case 'idle':
-      return '#eab308';
+      return '#eab308'; // 🟡 жълто — спрян, но ключът е в гнездото
     case 'parked-short':
-      return '#ef4444';
+      return '#ef4444'; // 🔴 червено — изгасен двигател
     case 'parked-long':
-      return '#6b7280';
+      return '#dc2626'; // 🔴 тъмно червено — изгасен отдавна
     case 'offline':
-      return '#1f2937';
+      return '#6b7280'; // ⚫ сиво — без връзка
     default:
       return '#3b82f6';
   }
