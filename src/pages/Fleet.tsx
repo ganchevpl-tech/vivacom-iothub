@@ -11,7 +11,6 @@ import type { LeftPanelTab, FleetStats } from '@/types/fleet';
 import 'leaflet/dist/leaflet.css';
 
 const Fleet = () => {
-  const { currentOrganizationId } = useAuth();
   const [activeTab, setActiveTab] = useState<LeftPanelTab>('units');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>();
 
