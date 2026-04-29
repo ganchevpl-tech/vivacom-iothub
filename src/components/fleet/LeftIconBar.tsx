@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Car, Users, MapPin, Bell, CircleAlert as AlertCircle, ChartBar as BarChart3, Wrench, Droplet, Package, Settings } from 'lucide-react';
+import { Car, Users, MapPin, Bell, CircleAlert as AlertCircle, ChartBar as BarChart3, Wrench, Droplet, Package, Settings, Zap, Leaf } from 'lucide-react';
 import type { LeftPanelTab } from '@/types/fleet';
 
 interface LeftIconBarProps {
@@ -19,6 +19,8 @@ const tabs: { icon: React.ReactNode; id: LeftPanelTab; label: string }[] = [
   { icon: <Wrench className="w-5 h-5" />, id: 'maintenance', label: 'Maintenance' },
   { icon: <Droplet className="w-5 h-5" />, id: 'fuel', label: 'Fuel' },
   { icon: <Package className="w-5 h-5" />, id: 'routes', label: 'Routes' },
+  { icon: <Zap className="w-5 h-5" />, id: 'ev-readiness', label: 'EV Readiness' },
+  { icon: <Leaf className="w-5 h-5" />, id: 'carbon', label: 'Carbon / ESG' },
   { icon: <Settings className="w-5 h-5" />, id: 'settings', label: 'Settings' },
 ];
 
