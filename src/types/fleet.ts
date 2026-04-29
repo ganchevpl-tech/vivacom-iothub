@@ -29,4 +29,4 @@ export interface FleetStats {
   activeAlerts: number;
 }
 
-export type LeftPanelTab = 'units' | 'drivers' | 'tracks' | 'alerts' | 'geofences' | 'reports' | 'maintenance' | 'fuel' | 'routes' | 'settings';
+export type LeftPanelTab = 'units' | 'drivers' | 'tracks' | 'alerts' | 'geofences' | 'reports' | 'maintenance' | 'fuel' | 'routes' | 'ev-readiness' | 'carbon' | 'settings';
