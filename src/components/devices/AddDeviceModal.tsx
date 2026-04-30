@@ -137,12 +137,42 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
                 />
               </div>
 
+              {p.id === 'matter' && stage !== 'idle' && stage !== 'paired' && (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  {matterSteps.map((s, i) => {
+                    const order = ['scan', 'connect', 'secure'];
+                    const currentIdx = order.indexOf(stage);
+                    const done = i < currentIdx;
+                    const active = i === currentIdx;
+                    return (
+                      <div key={s.key} className="flex-1 flex flex-col items-center gap-1 text-center">
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-full border flex items-center justify-center',
+                            done && 'bg-status-ok/20 border-status-ok text-status-ok',
+                            active && 'bg-primary/20 border-primary text-primary animate-pulse',
+                            !done && !active && 'border-border text-muted-foreground'
+                          )}
+                        >
+                          {done ? <CheckCircle2 className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
+                        </div>
+                        <span className={cn('text-[10px]', active && 'text-primary font-semibold')}>
+                          {s.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <Button onClick={handlePair} disabled={stage !== 'idle'} className="w-full">
                 {stage === 'idle' && <>Стартирай сдвояване</>}
-                {stage === 'scanning' && (
+                {(stage === 'scan' || stage === 'connect' || stage === 'secure') && (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Търсене през {PROTOCOL_LABELS[p.id]}...
+                    {stage === 'scan' && 'Сканиране на QR код...'}
+                    {stage === 'connect' && `Свързване чрез ${PROTOCOL_LABELS[p.id]}...`}
+                    {stage === 'secure' && 'Защитено сертифициране...'}
                   </>
                 )}
                 {stage === 'paired' && (
@@ -152,6 +182,7 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
                   </>
                 )}
               </Button>
+
             </TabsContent>
           ))}
         </Tabs>
