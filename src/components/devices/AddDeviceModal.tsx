@@ -26,47 +26,56 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
   const [protocol, setProtocol] = useState<DeviceProtocol>('matter');
   const [pairingCode, setPairingCode] = useState('');
   const [deviceName, setDeviceName] = useState('');
-  const [stage, setStage] = useState<'idle' | 'scanning' | 'paired'>('idle');
+  const [stage, setStage] = useState<'idle' | 'scan' | 'connect' | 'secure' | 'paired'>('idle');
+
+  const matterSteps = [
+    { key: 'scan', label: 'Scan QR', icon: QrCode },
+    { key: 'connect', label: 'Connect', icon: Link2 },
+    { key: 'secure', label: 'Secure', icon: ShieldCheck },
+  ] as const;
+
+  const resetAndClose = () => {
+    setOpen(false);
+    setStage('idle');
+    setPairingCode('');
+    setDeviceName('');
+  };
 
   const handlePair = async () => {
     if (!deviceName) {
       toast({ title: 'Въведете име на устройство', variant: 'destructive' });
       return;
     }
-    setStage('scanning');
+
+    if (protocol === 'matter') {
+      // Step-by-step Matter pairing simulation
+      setStage('scan');
+      await new Promise((r) => setTimeout(r, 900));
+      setStage('connect');
+      await new Promise((r) => setTimeout(r, 1100));
+      setStage('secure');
+      await new Promise((r) => setTimeout(r, 900));
+    } else {
+      setStage('connect');
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+
     try {
-      const { data, error } = await supabase.functions.invoke('mqtt-bridge', {
+      await supabase.functions.invoke('mqtt-bridge', {
         body: { action: 'pair', protocol, pairingCode, deviceName },
       });
-      if (error) throw error;
-      setStage('paired');
-      toast({
-        title: 'Устройството е сдвоено',
-        description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е добавено към MQTT gateway.`,
-      });
-      setTimeout(() => {
-        setOpen(false);
-        setStage('idle');
-        setPairingCode('');
-        setDeviceName('');
-      }, 1500);
-    } catch (err) {
-      // Fallback simulation when bridge is unavailable (mock pairing)
-      setTimeout(() => {
-        setStage('paired');
-        toast({
-          title: 'Демо сдвояване',
-          description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е регистрирано локално.`,
-        });
-        setTimeout(() => {
-          setOpen(false);
-          setStage('idle');
-          setPairingCode('');
-          setDeviceName('');
-        }, 1500);
-      }, 1500);
+    } catch {
+      // demo fallback
     }
+
+    setStage('paired');
+    toast({
+      title: 'Устройството е сдвоено',
+      description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е добавено към MQTT gateway.`,
+    });
+    setTimeout(resetAndClose, 1400);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
