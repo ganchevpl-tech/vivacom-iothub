@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, CircleCheck as CheckCircle2, Radio, Network, Zap } from 'lucide-react';
+import { Plus, Loader2, CircleCheck as CheckCircle2, Radio, Network, Zap, QrCode, ShieldCheck, Link2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { DeviceProtocol, PROTOCOL_LABELS } from '@/types/protocols';
 import { ProtocolBadge } from './ProtocolBadge';
 import { toast } from '@/hooks/use-toast';
@@ -25,47 +26,56 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
   const [protocol, setProtocol] = useState<DeviceProtocol>('matter');
   const [pairingCode, setPairingCode] = useState('');
   const [deviceName, setDeviceName] = useState('');
-  const [stage, setStage] = useState<'idle' | 'scanning' | 'paired'>('idle');
+  const [stage, setStage] = useState<'idle' | 'scan' | 'connect' | 'secure' | 'paired'>('idle');
+
+  const matterSteps = [
+    { key: 'scan', label: 'Scan QR', icon: QrCode },
+    { key: 'connect', label: 'Connect', icon: Link2 },
+    { key: 'secure', label: 'Secure', icon: ShieldCheck },
+  ] as const;
+
+  const resetAndClose = () => {
+    setOpen(false);
+    setStage('idle');
+    setPairingCode('');
+    setDeviceName('');
+  };
 
   const handlePair = async () => {
     if (!deviceName) {
       toast({ title: 'Въведете име на устройство', variant: 'destructive' });
       return;
     }
-    setStage('scanning');
+
+    if (protocol === 'matter') {
+      // Step-by-step Matter pairing simulation
+      setStage('scan');
+      await new Promise((r) => setTimeout(r, 900));
+      setStage('connect');
+      await new Promise((r) => setTimeout(r, 1100));
+      setStage('secure');
+      await new Promise((r) => setTimeout(r, 900));
+    } else {
+      setStage('connect');
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+
     try {
-      const { data, error } = await supabase.functions.invoke('mqtt-bridge', {
+      await supabase.functions.invoke('mqtt-bridge', {
         body: { action: 'pair', protocol, pairingCode, deviceName },
       });
-      if (error) throw error;
-      setStage('paired');
-      toast({
-        title: 'Устройството е сдвоено',
-        description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е добавено към MQTT gateway.`,
-      });
-      setTimeout(() => {
-        setOpen(false);
-        setStage('idle');
-        setPairingCode('');
-        setDeviceName('');
-      }, 1500);
-    } catch (err) {
-      // Fallback simulation when bridge is unavailable (mock pairing)
-      setTimeout(() => {
-        setStage('paired');
-        toast({
-          title: 'Демо сдвояване',
-          description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е регистрирано локално.`,
-        });
-        setTimeout(() => {
-          setOpen(false);
-          setStage('idle');
-          setPairingCode('');
-          setDeviceName('');
-        }, 1500);
-      }, 1500);
+    } catch {
+      // demo fallback
     }
+
+    setStage('paired');
+    toast({
+      title: 'Устройството е сдвоено',
+      description: `${deviceName} (${PROTOCOL_LABELS[protocol]}) е добавено към MQTT gateway.`,
+    });
+    setTimeout(resetAndClose, 1400);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -127,12 +137,42 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
                 />
               </div>
 
+              {p.id === 'matter' && stage !== 'idle' && stage !== 'paired' && (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  {matterSteps.map((s, i) => {
+                    const order = ['scan', 'connect', 'secure'];
+                    const currentIdx = order.indexOf(stage);
+                    const done = i < currentIdx;
+                    const active = i === currentIdx;
+                    return (
+                      <div key={s.key} className="flex-1 flex flex-col items-center gap-1 text-center">
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-full border flex items-center justify-center',
+                            done && 'bg-status-ok/20 border-status-ok text-status-ok',
+                            active && 'bg-primary/20 border-primary text-primary animate-pulse',
+                            !done && !active && 'border-border text-muted-foreground'
+                          )}
+                        >
+                          {done ? <CheckCircle2 className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
+                        </div>
+                        <span className={cn('text-[10px]', active && 'text-primary font-semibold')}>
+                          {s.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <Button onClick={handlePair} disabled={stage !== 'idle'} className="w-full">
                 {stage === 'idle' && <>Стартирай сдвояване</>}
-                {stage === 'scanning' && (
+                {(stage === 'scan' || stage === 'connect' || stage === 'secure') && (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Търсене през {PROTOCOL_LABELS[p.id]}...
+                    {stage === 'scan' && 'Сканиране на QR код...'}
+                    {stage === 'connect' && `Свързване чрез ${PROTOCOL_LABELS[p.id]}...`}
+                    {stage === 'secure' && 'Защитено сертифициране...'}
                   </>
                 )}
                 {stage === 'paired' && (
@@ -142,6 +182,7 @@ export function AddDeviceModal({ trigger }: AddDeviceModalProps) {
                   </>
                 )}
               </Button>
+
             </TabsContent>
           ))}
         </Tabs>

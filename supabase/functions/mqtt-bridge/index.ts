@@ -9,10 +9,12 @@ const corsHeaders = {
 };
 
 interface PairBody {
-  action: 'pair' | 'unpair' | 'list';
-  protocol: 'matter' | 'zigbee' | 'z-wave';
+  action: 'pair' | 'unpair' | 'list' | 'command';
+  protocol?: 'matter' | 'zigbee' | 'z-wave';
   pairingCode?: string;
   deviceName?: string;
+  topic?: string;
+  command?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -45,24 +47,47 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = (await req.json()) as PairBody;
-    if (!body?.action || !body?.protocol) {
-      return new Response(JSON.stringify({ error: 'action and protocol required' }), {
+    if (!body?.action) {
+      return new Response(JSON.stringify({ error: 'action required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // TODO: Свържи с реален MQTT broker (Mosquitto / Flespi MQTT) за командите
-    // mqtt publish: vivacom/gateway/pair { protocol, code, name }
+    // Remote command path: vivacom/gateways/{id}/command
+    if (body.action === 'command') {
+      const result = {
+        success: true,
+        action: 'command',
+        topic: body.topic ?? 'vivacom/gateways/unknown/command',
+        command: body.command ?? 'noop',
+        gateway: 'flespi-mqtt',
+        message: `Симулирана MQTT команда "${body.command}" към ${body.topic}.`,
+        timestamp: new Date().toISOString(),
+      };
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!body.protocol) {
+      return new Response(JSON.stringify({ error: 'protocol required for pair/unpair' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // TODO: Свържи с реален MQTT broker (Mosquitto / Flespi MQTT)
     const result = {
       success: true,
       protocol: body.protocol,
       deviceName: body.deviceName ?? 'Unnamed device',
       action: body.action,
       gateway: 'flespi-mqtt',
-      message: `Симулирано сдвояване чрез ${body.protocol}. Свържете истински MQTT broker за production.`,
+      message: `Симулирано сдвояване чрез ${body.protocol}.`,
       timestamp: new Date().toISOString(),
     };
+
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
