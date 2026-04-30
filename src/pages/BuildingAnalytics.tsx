@@ -12,10 +12,10 @@ const BuildingAnalytics = () => {
   const tempSensors = sensors.filter((s) => s.type === 'temperature');
   const humSensors = sensors.filter((s) => s.type === 'humidity');
   const avgTemp = tempSensors.length
-    ? (tempSensors.reduce((a, s) => a + s.value, 0) / tempSensors.length).toFixed(1)
+    ? (tempSensors.reduce((a, s) => a + Number(s.value), 0) / tempSensors.length).toFixed(1)
     : '--';
   const avgHum = humSensors.length
-    ? (humSensors.reduce((a, s) => a + s.value, 0) / humSensors.length).toFixed(1)
+    ? (humSensors.reduce((a, s) => a + Number(s.value), 0) / humSensors.length).toFixed(1)
     : '--';
   const alertCount = sensors.filter((s) => s.status === 'alert').length;
 
