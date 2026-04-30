@@ -12,7 +12,10 @@ import {
   Menu,
   Clock,
   Truck,
-  Shield
+  Shield,
+  Map,
+  ChartBar as BarChart3,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +28,9 @@ interface SidebarProps {
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/live-map', label: 'Live Map', icon: Map },
+  { path: '/building-analytics', label: 'Building Analytics', icon: BarChart3 },
+  { path: '/security-alerts', label: 'Security Alerts', icon: ShieldAlert },
   { path: '/access-control', label: 'Access Control', icon: ShieldCheck },
   { path: '/time-management', label: 'Time Management', icon: Clock },
   { path: '/fleet', label: 'Fleet', icon: Truck },
