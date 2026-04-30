@@ -11,6 +11,9 @@ import Logs from "./pages/Logs";
 import Settings from "./pages/Settings";
 import Fleet from "./pages/Fleet";
 import SuperAdmin from "./pages/SuperAdmin";
+import LiveMap from "./pages/LiveMap";
+import BuildingAnalytics from "./pages/BuildingAnalytics";
+import SecurityAlerts from "./pages/SecurityAlerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/live-map" element={<LiveMap />} />
+            <Route path="/building-analytics" element={<BuildingAnalytics />} />
+            <Route path="/security-alerts" element={<SecurityAlerts />} />
             <Route path="/access-control" element={<AccessControl />} />
             <Route path="/time-management" element={<TimeManagement />} />
             <Route path="/fleet" element={<Fleet />} />
