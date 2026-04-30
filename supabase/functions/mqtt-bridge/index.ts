@@ -9,10 +9,12 @@ const corsHeaders = {
 };
 
 interface PairBody {
-  action: 'pair' | 'unpair' | 'list';
-  protocol: 'matter' | 'zigbee' | 'z-wave';
+  action: 'pair' | 'unpair' | 'list' | 'command';
+  protocol?: 'matter' | 'zigbee' | 'z-wave';
   pairingCode?: string;
   deviceName?: string;
+  topic?: string;
+  command?: string;
 }
 
 Deno.serve(async (req: Request) => {
