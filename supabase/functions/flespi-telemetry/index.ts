@@ -101,14 +101,14 @@ serve(async (req) => {
   );
 
   const token = authHeader.replace('Bearer ', '');
-  const { data: claimsData, error: claimsError } = await (supabase.auth as any).getClaims(token);
-  if (claimsError || !claimsData?.claims?.sub) {
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  if (userError || !userData?.user?.id) {
     return new Response(JSON.stringify({ error: 'Unauthorized: invalid token' }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const userId = claimsData.claims.sub;
+  const userId = userData.user.id;
 
   // Rate limit per user
   if (!checkRateLimit(userId)) {
